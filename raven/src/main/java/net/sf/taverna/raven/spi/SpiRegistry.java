@@ -22,6 +22,8 @@ package net.sf.taverna.raven.spi;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -37,7 +39,7 @@ import net.sf.taverna.raven.repository.Artifact;
 import net.sf.taverna.raven.repository.ArtifactStatus;
 import net.sf.taverna.raven.repository.Repository;
 import net.sf.taverna.raven.repository.RepositoryListener;
-import net.sf.taverna.raven.repository.impl.LocalArtifactClassLoader;
+//import net.sf.taverna.raven.repository.impl.LocalArtifactClassLoader;
 
 /**
  * A typed registry of implementations of a particular Service Provider
@@ -48,20 +50,18 @@ import net.sf.taverna.raven.repository.impl.LocalArtifactClassLoader;
  * 
  * @author Tom Oinn
  */
-@SuppressWarnings("unchecked")
-public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
-
+public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 	private static Log logger = Log.getLogger(SpiRegistry.class);
 
-	private List<RegistryListener> listeners = new ArrayList<RegistryListener>();
+	private List<RegistryListener> listeners = new ArrayList<>();
 	private Repository repository;
 	private String classname;
-	private Set<Artifact> newArtifacts = new HashSet<Artifact>();
-	private List<ArtifactFilter> filters = new ArrayList<ArtifactFilter>();
+	private Set<Artifact> newArtifacts = new HashSet<>();
+	private List<ArtifactFilter> filters = new ArrayList<>();
 	private ClassLoader parentLoader = null;
-	private List<Class> implementations = null;
+	private List<Class<?>> implementations = null;
 	private RepositoryListener rlistener;
-	private List<Class> previousImplementations;
+	private List<Class<?>> previousImplementations;
 
 	/**
 	 * Create a new SpiRegistry based on a particular repository and searching
@@ -132,6 +132,7 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 		updateRegistry();
 	}
 
+	@Override
 	public void filterChanged(ArtifactFilter filter) {
 		implementations = null;
 		newArtifacts.clear();
@@ -149,7 +150,7 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 	/**
 	 * Get the Class objects for all implementations of this SPI currently known
 	 */
-	public synchronized List<Class> getClasses() {
+	public synchronized List<Class<?>> getClasses() {
 		if (implementations == null) {
 			updateRegistry();
 		}
@@ -163,7 +164,8 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 		return classname;
 	}
 
-	public Iterator<Class> iterator() {
+	@Override
+	public Iterator<Class<?>> iterator() {
 		return getClasses().iterator();
 	}
 
@@ -186,7 +188,7 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 		for (ArtifactFilter filter : filters) {
 			filter.removeArtifactFilterListener(this);
 		}
-		filters = new ArrayList<ArtifactFilter>(newFilters);
+		filters = new ArrayList<>(newFilters);
 		for (ArtifactFilter filter : filters) {
 			filter.addArtifactFilterListener(this);
 		}
@@ -204,13 +206,12 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 	 * implementations.
 	 */
 	public synchronized void updateRegistry() {
-
-		Set<URL> seenURLs = new HashSet<URL>();
-		Set<ClassLoader> seenClassLoaders = new HashSet<ClassLoader>();
-		Set<Artifact> workingSet = new HashSet<Artifact>(newArtifacts);
+		Set<URI> seenURLs = new HashSet<>();
+		Set<ClassLoader> seenClassLoaders = new HashSet<>();
+		Set<Artifact> workingSet = new HashSet<>(newArtifacts);
 		newArtifacts.clear();
 		if (implementations == null) {
-			implementations = new ArrayList<Class>();
+			implementations = new ArrayList<>();
 		}
 		boolean addedNew = false;
 
@@ -240,12 +241,17 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 			}
 			while (resources.hasMoreElements()) {
 				URL resourceURL = resources.nextElement();
-				if (resourceURL == null || seenURLs.contains(resourceURL)) {
-					logger.debug("No SPI file for " + classname);
+				logger.debug("considering " + resourceURL + " in classloader " + cl);
+				try {
+					if (resourceURL == null || !seenURLs.add(resourceURL.toURI())) {
+						logger.debug("No SPI file for " + classname + " (already seen)");
+						continue;
+					}
+				} catch (URISyntaxException e) {
+					logger.debug("No SPI file for " + classname + " (invalid uri)");
 					continue;
 				}
 				// Found an appropriate SPI file
-				seenURLs.add(resourceURL);
 				logger.debug("Found SPI file at " + resourceURL);
 				InputStream is;
 				try {
@@ -258,18 +264,14 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 				scanner.useDelimiter("\n");
 				while (scanner.hasNext()) {
 					String impName = scanner.next().trim();
-					if (impName.length() == 0 || impName.startsWith("#")) { // ignore
-																			// commented
-																			// entries
-																			// or
-																			// blank
-																			// lines
+					if (impName.length() == 0 || impName.startsWith("#")) {
+						// ignore commented entries or blank lines
 						// logger.debug("Skipping line " + impName);
 						continue;
 					} else {
 						logger.info("Loading SPI " + impName);
 					}
-					Class impClass;
+					Class<?> impClass;
 					try {
 						impClass = cl.loadClass(impName);
 					} catch (ClassNotFoundException e) {
@@ -328,7 +330,7 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 	private boolean implementationRemoved() {
 		if (previousImplementations == null)
 			return false;
-		for (Class c : previousImplementations) {
+		for (Class<?> c : previousImplementations) {
 			if (!implementations.contains(c))
 				return true;
 		}
@@ -346,7 +348,6 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 }
 
 class AddNewArtifactsListener implements RepositoryListener {
-
 	private static Log logger = Log.getLogger(AddNewArtifactsListener.class);
 	private SpiRegistry registry;
 
@@ -354,8 +355,11 @@ class AddNewArtifactsListener implements RepositoryListener {
 		this.registry = registry;
 	}
 
-	// Listen to repository events and test any newly
-	// ready artifacts for the appropriate SPI
+	/**
+	 * Listen to repository events and test any newly ready artifacts for the
+	 * appropriate SPI.
+	 */
+	@Override
 	public void statusChanged(Artifact a, ArtifactStatus oldStatus,
 			ArtifactStatus newStatus) {
 		if (newStatus.equals(ArtifactStatus.Ready)) {
