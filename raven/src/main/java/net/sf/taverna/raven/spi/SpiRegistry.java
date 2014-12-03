@@ -51,7 +51,7 @@ import net.sf.taverna.raven.repository.RepositoryListener;
  * @author Tom Oinn
  */
 @SuppressWarnings("rawtypes")
-public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
+public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 	private static Log logger = Log.getLogger(SpiRegistry.class);
 
 	private List<RegistryListener> listeners = new ArrayList<>();
@@ -113,9 +113,8 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 	 */
 	public void addRegistryListener(RegistryListener l) {
 		synchronized (listeners) {
-			if (!listeners.contains(l)) {
+			if (!listeners.contains(l))
 				listeners.add(l);
-			}
 		}
 	}
 
@@ -124,9 +123,8 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 	 */
 	public synchronized void clearFilters() {
 		implementations = null;
-		for (ArtifactFilter filter : filters) {
+		for (ArtifactFilter filter : filters)
 			filter.removeArtifactFilterListener(this);
-		}
 		filters.clear();
 		newArtifacts.clear();
 		newArtifacts.addAll(repository.getArtifacts(ArtifactStatus.Ready));
@@ -152,9 +150,8 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 	 * Get the Class objects for all implementations of this SPI currently known
 	 */
 	public synchronized List<Class> getClasses() {
-		if (implementations == null) {
+		if (implementations == null)
 			updateRegistry();
-		}
 		return implementations;
 	}
 
@@ -165,10 +162,9 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 		return classname;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public Iterator<Class<?>> iterator() {
-		return new ArrayList(getClasses()).iterator();
+	public Iterator<Class> iterator() {
+		return getClasses().iterator();
 	}
 
 	/**
@@ -187,13 +183,11 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 	 */
 	public synchronized void setFilters(List<ArtifactFilter> newFilters) {
 		implementations = null;
-		for (ArtifactFilter filter : filters) {
+		for (ArtifactFilter filter : filters)
 			filter.removeArtifactFilterListener(this);
-		}
 		filters = new ArrayList<>(newFilters);
-		for (ArtifactFilter filter : filters) {
+		for (ArtifactFilter filter : filters)
 			filter.addArtifactFilterListener(this);
-		}
 		newArtifacts.clear();
 		newArtifacts.addAll(repository.getArtifacts(ArtifactStatus.Ready));
 		updateRegistry();
@@ -212,15 +206,13 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 		Set<ClassLoader> seenClassLoaders = new HashSet<>();
 		Set<Artifact> workingSet = new HashSet<>(newArtifacts);
 		newArtifacts.clear();
-		if (implementations == null) {
+		if (implementations == null)
 			implementations = new ArrayList<>();
-		}
 		boolean addedNew = false;
 
 		// Do filtering
-		for (ArtifactFilter af : filters) {
+		for (ArtifactFilter af : filters)
 			workingSet = af.filter(workingSet);
-		}
 		for (Artifact a : workingSet) {
 			ClassLoader cl;
 			try {
@@ -229,9 +221,8 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 				logger.error("Could not get class loader for " + a, e);
 				continue;
 			}
-			if (seenClassLoaders.contains(cl)) {
+			if (seenClassLoaders.contains(cl))
 				continue;
-			}
 			seenClassLoaders.add(cl);
 			Enumeration<URL> resources;
 			String resource = "META-INF/services/" + classname;
@@ -255,62 +246,53 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 				}
 				// Found an appropriate SPI file
 				logger.debug("Found SPI file at " + resourceURL);
-				InputStream is;
-				try {
-					is = resourceURL.openStream();
+				try (InputStream is = resourceURL.openStream();
+						Scanner scanner = new Scanner(is)) {
+					scanner.useDelimiter("\n");
+					while (scanner.hasNext()) {
+						String impName = scanner.next().trim();
+						if (impName.length() == 0 || impName.startsWith("#")) {
+							// ignore commented entries or blank lines
+							// logger.debug("Skipping line " + impName);
+							continue;
+						}
+
+						logger.info("Loading SPI " + impName);
+						Class<?> impClass;
+						try {
+							impClass = cl.loadClass(impName);
+						} catch (ClassNotFoundException e) {
+							logger.warn("Could not find class " + impName
+									+ " using " + cl, e);
+							continue;
+						} catch (LinkageError e) {
+							logger.error("Could not load class " + impName, e);
+							continue;
+						}
+						/*if (! cl.equals(impClass.getClassLoader())) {
+							logger.warn("Loaded SPI " + classname + " implementation "
+									+ impName + " is from classloader "
+									+ impClass.getClassLoader()
+									+ " instead of expected " + cl);
+						}*/
+						// Why is this test needed? Disabled to avoid raven.eclipse dependency
+					
+//						if (impClass.getClassLoader() instanceof LocalArtifactClassLoader
+//								|| System.getProperty("raven.eclipse") != null) {
+						if (!implementations.contains(impClass))
+							implementations.add(impClass);
+						/*
+						 * only mark as new if this class did not appear in the
+						 * previous set of implementations, i.e. is actually
+						 * new.
+						 */
+						if (previousImplementations == null
+								|| !previousImplementations.contains(impClass))
+							addedNew = true;
+//						}
+					}
 				} catch (IOException ex) {
 					logger.warn("Could not read " + resourceURL, ex);
-					continue;
-				}
-				Scanner scanner = new Scanner(is);
-				scanner.useDelimiter("\n");
-				while (scanner.hasNext()) {
-					String impName = scanner.next().trim();
-					if (impName.length() == 0 || impName.startsWith("#")) {
-						// ignore commented entries or blank lines
-						// logger.debug("Skipping line " + impName);
-						continue;
-					} else {
-						logger.info("Loading SPI " + impName);
-					}
-					Class<?> impClass;
-					try {
-						impClass = cl.loadClass(impName);
-					} catch (ClassNotFoundException e) {
-						logger.warn("Could not find class " + impName
-								+ " using " + cl, e);
-						continue;
-					} catch (LinkageError e) {
-						logger.error("Could not load class " + impName, e);
-						continue;
-					}
-					/*if (! cl.equals(impClass.getClassLoader())) {
-						logger.warn("Loaded SPI " + classname + " implementation "
-								+ impName + " is from classloader "
-								+ impClass.getClassLoader()
-								+ " instead of expected " + cl);
-					}*/
-					// Why is this test needed? Disabled to avoid raven.eclipse dependency
-					
-//					if (impClass.getClassLoader() instanceof LocalArtifactClassLoader
-//							|| System.getProperty("raven.eclipse") != null) {
-					if (!implementations.contains(impClass)) {
-						implementations.add(impClass);
-					}
-						// only mark as new if this class did not appear in the
-						// previous set of implementations, i.e.
-						// is actually new.
-						if (previousImplementations == null
-								|| !previousImplementations.contains(impClass)) {
-							addedNew = true;
-						}
-//					}
-				}
-				scanner.close();
-				try {
-					is.close();
-				} catch (IOException e) {
-					logger.warn("Could not close stream " + resourceURL, e);
 					continue;
 				}
 			}
@@ -318,9 +300,8 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 		boolean removedOld = implementationRemoved();
 		previousImplementations = implementations;
 
-		if (addedNew || removedOld) {
+		if (addedNew || removedOld)
 			notifyListeners();
-		}
 	}
 
 	/**
@@ -332,21 +313,18 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 	private boolean implementationRemoved() {
 		if (previousImplementations == null)
 			return false;
-		for (Class<?> c : previousImplementations) {
+		for (Class<?> c : previousImplementations)
 			if (!implementations.contains(c))
 				return true;
-		}
 		return false;
 	}
 
 	private void notifyListeners() {
 		synchronized (listeners) {
-			for (RegistryListener rl : listeners) {
+			for (RegistryListener rl : listeners)
 				rl.spiRegistryUpdated(this);
-			}
 		}
 	}
-
 }
 
 class AddNewArtifactsListener implements RepositoryListener {
