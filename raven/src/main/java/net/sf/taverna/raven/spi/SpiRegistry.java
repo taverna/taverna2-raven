@@ -50,6 +50,7 @@ import net.sf.taverna.raven.repository.RepositoryListener;
  * 
  * @author Tom Oinn
  */
+@SuppressWarnings("rawtypes")
 public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 	private static Log logger = Log.getLogger(SpiRegistry.class);
 
@@ -59,9 +60,9 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 	private Set<Artifact> newArtifacts = new HashSet<>();
 	private List<ArtifactFilter> filters = new ArrayList<>();
 	private ClassLoader parentLoader = null;
-	private List<Class<?>> implementations = null;
+	private List<Class> implementations = null;
 	private RepositoryListener rlistener;
-	private List<Class<?>> previousImplementations;
+	private List<Class> previousImplementations;
 
 	/**
 	 * Create a new SpiRegistry based on a particular repository and searching
@@ -150,7 +151,7 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 	/**
 	 * Get the Class objects for all implementations of this SPI currently known
 	 */
-	public synchronized List<Class<?>> getClasses() {
+	public synchronized List<Class> getClasses() {
 		if (implementations == null) {
 			updateRegistry();
 		}
@@ -164,9 +165,10 @@ public class SpiRegistry implements Iterable<Class<?>>, ArtifactFilterListener {
 		return classname;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Iterator<Class<?>> iterator() {
-		return getClasses().iterator();
+		return new ArrayList(getClasses()).iterator();
 	}
 
 	/**
