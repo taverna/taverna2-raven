@@ -35,7 +35,7 @@ package net.sf.taverna.raven.repository;
  * @author Tom Oinn
  * @author Stian Soiland-Reyes
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings("rawtypes")
 public interface Artifact extends Comparable {
 
 	/**
@@ -49,6 +49,7 @@ public interface Artifact extends Comparable {
 	 * @return true if other is an Artifact and the artifactId, groupId and
 	 *         version equals
 	 */
+	@Override
 	public boolean equals(Object other);
 
 	/**
@@ -80,6 +81,7 @@ public interface Artifact extends Comparable {
 	 * 
 	 * @return Hash of the concatination of the artifactId, groupId and version
 	 */
+	@Override
 	public int hashCode();
 
 }

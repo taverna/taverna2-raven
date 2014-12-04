@@ -51,15 +51,14 @@ import net.sf.taverna.raven.log.Log;
  *            corresponding to the interface name specified in the SpiRegistry
  *            to which this binds.
  */
+@SuppressWarnings("rawtypes")
 public class InstanceRegistry<IType> implements Iterable<IType>,
 		RegistryListener {
-
 	private static Log logger = Log.getLogger(InstanceRegistry.class);
 
-	private List<InstanceRegistryListener> listeners = new ArrayList<InstanceRegistryListener>();
+	private List<InstanceRegistryListener> listeners = new ArrayList<>();
 	private List<IType> instances = null;
 	private Object[] cArgs;
-	@SuppressWarnings("unchecked")
 	private Class[] cArgTypes;
 	private SpiRegistry registry;
 
@@ -107,9 +106,8 @@ public class InstanceRegistry<IType> implements Iterable<IType>,
 	 */
 	public void addRegistryListener(InstanceRegistryListener l) {
 		synchronized (listeners) {
-			if (!listeners.contains(l)) {
+			if (!listeners.contains(l))
 				listeners.add(l);
-			}
 		}
 	}
 
@@ -125,12 +123,11 @@ public class InstanceRegistry<IType> implements Iterable<IType>,
 	 * @return instance List
 	 */
 	public synchronized List<IType> getInstances() {
-		if (instances == null) {
+		if (instances == null)
 			update(registry.getClasses());
-		}
 		logger.debug("getInstances called, contains " + instances.size()
 				+ " instances of " + registry.getClassName());
-		return new ArrayList<IType>(instances);
+		return new ArrayList<>(instances);
 	}
 
 	/**
@@ -138,6 +135,7 @@ public class InstanceRegistry<IType> implements Iterable<IType>,
 	 * concurrent modification exceptions when update events occur in the
 	 * underlying registry.
 	 */
+	@Override
 	public Iterator<IType> iterator() {
 		return getInstances().iterator();
 	}
@@ -158,6 +156,7 @@ public class InstanceRegistry<IType> implements Iterable<IType>,
 	 * need to as it will be updated automatically when the list is first
 	 * accessed through the getInstances method
 	 */
+	@Override
 	public void spiRegistryUpdated(SpiRegistry registry) {
 		if (instances != null) {
 			update(registry.getClasses());
@@ -166,9 +165,8 @@ public class InstanceRegistry<IType> implements Iterable<IType>,
 
 	private void notifyListeners() {
 		synchronized (listeners) {
-			for (InstanceRegistryListener rl : listeners) {
+			for (InstanceRegistryListener rl : listeners)
 				rl.instanceRegistryUpdated(this);
-			}
 		}
 	}
 
@@ -176,26 +174,32 @@ public class InstanceRegistry<IType> implements Iterable<IType>,
 	private synchronized void update(List<Class> classList) {
 		boolean changed = false;
 		if (instances == null) {
-			instances = new ArrayList<IType>();
+			instances = new ArrayList<>();
 			changed = true;
 		}
-		// First copy any existing instances we have for a Class
-		// in the list to the temp array, removing the Class
-		// for that instance from the classes List.
-		List<IType> temp = new ArrayList<IType>();
-		List<Class> classes = new ArrayList<Class>(classList);
+		/*
+		 * First copy any existing instances we have for a Class in the list to
+		 * the temp array, removing the Class for that instance from the classes
+		 * List.
+		 */
+		List<IType> temp = new ArrayList<>();
+		List<Class> classes = new ArrayList<>(classList);
 		for (IType o : instances) {
 			if (classes.contains(o.getClass())) {
 				temp.add(o);
 				classes.remove(o.getClass());
 			} else {
-				// Instance not found in the new list so
-				// the registry state must change
+				/*
+				 * Instance not found in the new list so the registry state must
+				 * change
+				 */
 				changed = true;
 			}
 		}
-		// Iterate over any remaining entries in the classes List
-		// and attempt to construct new instances from them.
+		/*
+		 * Iterate over any remaining entries in the classes List and attempt to
+		 * construct new instances from them.
+		 */
 		for (Class c : classes) {
 			try {
 				try {
@@ -244,7 +248,5 @@ public class InstanceRegistry<IType> implements Iterable<IType>,
 			instances = temp;
 			notifyListeners();
 		}
-
 	}
-
 }

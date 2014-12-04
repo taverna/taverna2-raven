@@ -58,6 +58,7 @@ package net.sf.taverna.raven.log;
  * @author Stian Soiland-Reyes
  * 
  */
+@SuppressWarnings("rawtypes")
 public class Log {
 	// For our internal logging (hihi)
 	private static Log logger = Log.getLogger(Log.class);
@@ -65,7 +66,6 @@ public class Log {
 	// Implementation as set with setImplementation() - possibly null (no
 	// logging)
 	private static LogInterface logImplementation = new JavaLog();
-	@SuppressWarnings("unchecked")
 	public static Log getLogger(Class c) {
 		return new Log(c);
 	}
@@ -87,7 +87,6 @@ public class Log {
 	}
 
 	// The class that constructed this logger with getLogger(Class)
-	@SuppressWarnings("unchecked")
 	private Class callingClass;
 
 	// The instance of our implementation
@@ -99,7 +98,6 @@ public class Log {
 	 * @param c
 	 *            Class that
 	 */
-	@SuppressWarnings("unchecked")
 	private Log(Class c) {
 		this.callingClass = c;
 		this.logInstance = null;

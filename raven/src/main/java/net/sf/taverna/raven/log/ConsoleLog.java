@@ -40,6 +40,7 @@ import java.io.PrintStream;
  * 
  * @author Stian Soiland-Reyes
  */
+@SuppressWarnings("rawtypes")
 public class ConsoleLog implements LogInterface {
 	/**
 	 * Minimum level to log, ie. messages with lover priority will be discarded.
@@ -65,16 +66,16 @@ public class ConsoleLog implements LogInterface {
 		this(ConsoleLog.class);
 	}
 
-	@SuppressWarnings("unchecked")
 	public ConsoleLog(Class c) {
 		this.callingClass = c.toString();
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public LogInterface getLogger(Class c) {
 		return new ConsoleLog(c);
 	}
 
+	@Override
 	public void log(LogInterface.Priority p, Object msg, Throwable ex) {
 		if (p.compareTo(level) < 0) {
 			return;

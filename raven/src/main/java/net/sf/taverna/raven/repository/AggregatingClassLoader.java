@@ -38,8 +38,7 @@ import java.util.List;
  * @author Tom Oinn
  */
 public class AggregatingClassLoader extends ClassLoader {
-
-	List<ClassLoader> loaders = new ArrayList<ClassLoader>();
+	List<ClassLoader> loaders = new ArrayList<>();
 
 	public AggregatingClassLoader(Repository rep, List<Artifact> artifacts)
 			throws ArtifactStateException, ArtifactNotFoundException {
@@ -76,10 +75,12 @@ public class AggregatingClassLoader extends ClassLoader {
 		}
 		final Iterator<URL> i = results.iterator();
 		return new Enumeration<URL>() {
+			@Override
 			public boolean hasMoreElements() {
 				return i.hasNext();
 			}
 
+			@Override
 			public URL nextElement() {
 				return i.next();
 			}

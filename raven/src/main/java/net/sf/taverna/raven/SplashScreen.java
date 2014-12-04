@@ -133,6 +133,7 @@ public class SplashScreen extends JFrame {
 		if (timeout > 0) {
 
 			Runnable waitRunner = new Runnable() {
+				@Override
 				public void run() {
 					try {
 						Thread.sleep(timeout);
@@ -205,6 +206,7 @@ public class SplashScreen extends JFrame {
 
 	private synchronized void closeMe() {
 		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				setVisible(false);
 				dispose();
@@ -213,6 +215,7 @@ public class SplashScreen extends JFrame {
 		});
 	}
 
+	@SuppressWarnings("unused")
 	private synchronized void requestCloseFromMouse() {
 		setClosable();
 		timedOut = true;
@@ -236,6 +239,7 @@ public class SplashScreen extends JFrame {
 			this.splash = splash;
 		}
 
+		@Override
 		public void statusChanged(Artifact a, ArtifactStatus oldStatus,
 				ArtifactStatus newStatus) {
 			splash.setText(a.getArtifactId() + "-" + a.getVersion() + " : "
@@ -256,6 +260,7 @@ public class SplashScreen extends JFrame {
 			// FIXME: What if there are several artifacts JarFetching at the
 			// same time? Would we get many progressThreads?
 			Thread progressThread = new Thread(new Runnable() {
+				@Override
 				public void run() {
 					while (true) {
 						try {

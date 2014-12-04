@@ -42,23 +42,15 @@ import net.sf.taverna.raven.repository.Repository;
  * Implementation of ClassLoader that uses the artifact metadata to manage any
  * dependencies of the artifact
  */
+@SuppressWarnings("rawtypes")
 public class LocalArtifactClassLoader extends URLClassLoader {
-
 	private static Log logger = Log.getLogger(LocalArtifactClassLoader.class);
 
-	private List<LocalArtifactClassLoader> childLoaders = new ArrayList<LocalArtifactClassLoader>();
-
-	@SuppressWarnings("unchecked")
-	private Map<String, Class> classMap = new HashMap<String, Class>();
-
-	private static Map<String, Object> findClassLocks = new HashMap<String, Object>();
-
+	private List<LocalArtifactClassLoader> childLoaders = new ArrayList<>();
+	private Map<String, Class> classMap = new HashMap<>();
 	private String name;
-
 	private LocalRepository repository;
-
-	private Set<String> unknownClasses = new HashSet<String>();
-
+	private Set<String> unknownClasses = new HashSet<>();
 	private Artifact artifact;
 
 	protected LocalArtifactClassLoader(LocalRepository r, ArtifactImpl a)
@@ -113,7 +105,6 @@ public class LocalArtifactClassLoader extends URLClassLoader {
 		return repository;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	/*
 	 * Overridden to prevent it checking parents if the parent is the
@@ -122,9 +113,8 @@ public class LocalArtifactClassLoader extends URLClassLoader {
 	 * repositories, defined.
 	 */
 	public Enumeration<URL> getResources(String name) throws IOException {
-		if (getParent() == null || !isParentRavenClassLoader()) {
+		if (getParent() == null || !isParentRavenClassLoader())
 			return super.getResources(name);
-		}
 		return findResources(name);
 	}
 
@@ -138,39 +128,33 @@ public class LocalArtifactClassLoader extends URLClassLoader {
 			Set<URL> resourceLocations, String name) throws IOException {
 		alreadySeen.add(this);
 		URL resourceURL = super.findResource(name);
-		if (resourceURL != null) {
+		if (resourceURL != null)
 			resourceLocations.add(resourceURL);
-		}
-		for (LocalArtifactClassLoader cl : childLoaders) {
-			if (!alreadySeen.contains(cl)) {
+		for (LocalArtifactClassLoader cl : childLoaders)
+			if (!alreadySeen.contains(cl))
 				cl.enumerateResources(alreadySeen, resourceLocations, name);
-			}
-		}
 	}
 
 	private URL findFirstInstanceOfResource(
 			Set<LocalArtifactClassLoader> alreadySeen, String name) {
 		URL resourceURL = super.findResource(name);
-		if (resourceURL != null) {
+		if (resourceURL != null)
 			return resourceURL;
-		}
 		alreadySeen.add(this);
-		for (LocalArtifactClassLoader cl : childLoaders) {
+		for (LocalArtifactClassLoader cl : childLoaders)
 			if (!alreadySeen.contains(cl)) {
 				resourceURL = cl.findFirstInstanceOfResource(alreadySeen, name);
-				if (resourceURL != null) {
+				if (resourceURL != null)
 					return resourceURL;
-				}
 			}
-		}
 		return null;
 	}
 
 	private void init(ArtifactImpl a) throws ArtifactStateException {
 		List<ArtifactImpl> deps = a.getDependencies();
 		name = a.toString();
-		for (ArtifactImpl dep : deps) {
-			synchronized (LocalRepository.loaderMap) {
+		synchronized (LocalRepository.loaderMap) {
+			for (ArtifactImpl dep : deps) {
 				LocalArtifactClassLoader ac = LocalRepository.loaderMap
 						.get(dep);
 				if (ac == null) {
@@ -200,38 +184,30 @@ public class LocalArtifactClassLoader extends URLClassLoader {
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
 	private Class<?> loadClass(String name, Set<ClassLoader> seenLoaders)
 			throws ClassNotFoundException {
-		Class result = null;
-		if (classMap.get(name) != null) {
-			result = classMap.get(name);
-		} else {
-			Class loadedClass = findLoadedClass(name);
-			if (loadedClass != null) {
-				result = loadedClass;
-			} else {
-				ClassLoader parent = getParent();
-				if (parent != null && !seenLoaders.contains(parent)) {
-					try {
-						if (parent instanceof LocalArtifactClassLoader) {
-							result = ((LocalArtifactClassLoader) parent)
-									.loadClass(name, seenLoaders);
-						} else {
-							if (validClassLoaderForName(parent, name))
-								result = parent.loadClass(name);
-						}
-					} catch (ClassNotFoundException cnfe) {
-						seenLoaders.add(parent);
-					}
+		Class result = classMap.get(name);
+		if (result != null)
+			return result;
+		Class loadedClass = findLoadedClass(name);
+		if (loadedClass != null)
+			result = loadedClass;
+		else {
+			ClassLoader parent = getParent();
+			if (parent != null && !seenLoaders.contains(parent))
+				try {
+					if (parent instanceof LocalArtifactClassLoader)
+						result = ((LocalArtifactClassLoader) parent).loadClass(
+								name, seenLoaders);
+					else if (validClassLoaderForName(parent, name))
+						result = parent.loadClass(name);
+				} catch (ClassNotFoundException cnfe) {
+					seenLoaders.add(parent);
 				}
-				if (result == null)
-					result = findClass(name, seenLoaders);
-			}
+			if (result == null)
+				result = findClass(name, seenLoaders);
 		}
-		if (!classMap.containsKey(name)) {
-			classMap.put(name, result);
-		}
+		classMap.put(name, result);
 		return result;
 	}
 
@@ -254,9 +230,11 @@ public class LocalArtifactClassLoader extends URLClassLoader {
 		if (!isParentRavenClassLoader())
 			return true;
 
-		// the only class of the package net.sf.taverna.raven that isn't part of
-		// the raven artifact is Log4jLog - which would shouldn't be found here
-		// anyway
+		/*
+		 * the only class of the package net.sf.taverna.raven that isn't part of
+		 * the raven artifact is Log4jLog - which would shouldn't be found here
+		 * anyway
+		 */
 		if (name.startsWith("net.sf.taverna.raven")
 				&& !name.endsWith("Log4jLog"))
 			return true;
@@ -279,11 +257,9 @@ public class LocalArtifactClassLoader extends URLClassLoader {
 			if (loadedClass != null && foundClass != loadedClass) {
 				logger.warn("Returning already loaded class instead of " + foundClass);
 				return loadedClass;
-			} else {
-				// We are the first one, return ours
-				return foundClass;
 			}
-			
+			// We are the first one, return ours
+			return foundClass;
 		} catch (ClassNotFoundException ex) {
 			if (!unknownClasses.contains(name)) {
 				// Only log it once
@@ -295,7 +271,6 @@ public class LocalArtifactClassLoader extends URLClassLoader {
 		}
 	}		
 
-	@SuppressWarnings("unchecked")
 	protected Class<?> findClass(String name, Set<ClassLoader> seenLoaders)
 			throws ClassNotFoundException {
 		Class loadedClass = null;
@@ -305,30 +280,27 @@ public class LocalArtifactClassLoader extends URLClassLoader {
 		synchronized (classMap) {
 			loadedClass = classMap.get(name);
 		}
-		if (loadedClass != null) {
+		if (loadedClass != null)
 			logger.debug("Returning cached '" + name + "' - " + this);
-		} else {
+		else {
 			try {
 				loadedClass = super.findClass(name);
 				logger.debug("Returning found '" + name + "' - " + this);
 			} catch (ClassNotFoundException e) {
-				for (LocalArtifactClassLoader ac : childLoaders) {
-					if (!seenLoaders.contains(ac)) {
+				for (LocalArtifactClassLoader ac : childLoaders)
+					if (!seenLoaders.contains(ac))
 						try {
 							loadedClass = ac.loadClass(name, seenLoaders);
 						} catch (ClassNotFoundException cnfe) {
 							logger.debug("No '" + name + "' in " + this);
 						}
-					}
-				}
 			} catch (LinkageError e) {
 				loadedClass = findLoadedClass(name);
 				if (loadedClass != null) {
 					logger.warn("Using already found class " + name + " ACL=" + this, e);
 					return loadedClass;
-				} else {
+				} else
 					logger.error("Error finding class " + name + " ACL=" + this, e);					
-				}
 			} catch (Error e) {
 				logger.error("Error finding class " + name + " ACL=" + this, e);
 			}
@@ -339,10 +311,8 @@ public class LocalArtifactClassLoader extends URLClassLoader {
 					+ foundLoadedClass + " instead");
 			loadedClass = foundLoadedClass;
 		}		
-		if (loadedClass == null) {
+		if (loadedClass == null)
 			throw new ClassNotFoundException(name);
-		}
-
 		
 		synchronized (classMap) {
 			if (!classMap.containsKey(name)) {

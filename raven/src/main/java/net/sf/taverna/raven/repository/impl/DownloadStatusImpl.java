@@ -39,14 +39,17 @@ public class DownloadStatusImpl implements DownloadStatus {
 		this.finished = false;
 	}
 
+	@Override
 	public int getReadBytes() {
 		return this.read;
 	}
 
+	@Override
 	public int getTotalBytes() {
 		return this.total;
 	}
 
+	@Override
 	public boolean isFinished() {
 		return finished;
 	}

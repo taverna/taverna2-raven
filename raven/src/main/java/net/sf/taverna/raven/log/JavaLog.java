@@ -63,6 +63,7 @@ import java.util.logging.Logger;
  * @author Stian Soiland-Reyes
  * 
  */
+@SuppressWarnings("rawtypes")
 public class JavaLog implements LogInterface {
 	private static Map<Priority, Level> priorityMap = new HashMap<Priority, Level>();
 	static {
@@ -83,7 +84,6 @@ public class JavaLog implements LogInterface {
 		this(JavaLog.class);
 	}
 
-	@SuppressWarnings("unchecked")
 	public JavaLog(Class c) {
 		// We'll use the full classname as our identifier to be
 		// slightly log4j compatible
@@ -91,11 +91,12 @@ public class JavaLog implements LogInterface {
 		logger = Logger.getLogger(callingClass);
 	}
 	
-	@SuppressWarnings("unchecked")
+	@Override
 	public JavaLog getLogger(Class c) {
 		return new JavaLog(c);
 	}
 
+	@Override
 	public void log(Priority p, Object msg, Throwable ex) {
 		// We can supply the callingClass, but don't want to start
 		// guessing the calling method

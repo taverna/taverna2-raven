@@ -26,7 +26,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -224,16 +224,16 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 			if (seenClassLoaders.contains(cl))
 				continue;
 			seenClassLoaders.add(cl);
-			Enumeration<URL> resources;
+			List<URL> resources;
 			String resource = "META-INF/services/" + classname;
 			try {
-				resources = cl.getResources(resource);
+				resources = Collections.list(cl.getResources(resource));
 			} catch (IOException e) {
 				logger.warn("Could not find resource " + resource, e);
 				continue;
 			}
-			while (resources.hasMoreElements()) {
-				URL resourceURL = resources.nextElement();
+			logger.debug("Found service description files: " + resources);
+			for (URL resourceURL : resources) {
 				logger.debug("considering " + resourceURL + " in classloader " + cl);
 				try {
 					if (resourceURL == null || !seenURLs.add(resourceURL.toURI())) {

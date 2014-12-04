@@ -83,13 +83,15 @@ public class LocalRepository implements Repository {
 	private static final String RAVEN_ARTIFACT = "raven";
 
 	private static final String RAVEN_GROUPID = "net.sf.taverna.t2.infrastructure";
-	// the version of raven to used as the artifact for the faked classloader
-	// used during initialisation.
+	/**
+	 * the version of raven to used as the artifact for the faked classloader
+	 * used during initialisation.
+	 */
 	private static final String RAVEN_VERSION = "1.12";
 
-	static final Map<Artifact, LocalArtifactClassLoader> loaderMap = new HashMap<Artifact, LocalArtifactClassLoader>();
+	static final Map<Artifact, LocalArtifactClassLoader> loaderMap = new HashMap<>();
 
-	static Map<File, Repository> repositoryCache = new HashMap<File, Repository>();
+	static Map<File, Repository> repositoryCache = new HashMap<>();
 
 	/**
 	 * Get a new or cached instance of LocalRepository for the supplied base
@@ -136,7 +138,7 @@ public class LocalRepository implements Repository {
 	 * and bytes downloaded. If the artifact has no pending downloads it will
 	 * not appear as a key in this map.
 	 */
-	private Map<ArtifactImpl, DownloadStatusImpl> dlstatus = new HashMap<ArtifactImpl, DownloadStatusImpl>();
+	private Map<ArtifactImpl, DownloadStatusImpl> dlstatus = new HashMap<>();
 
 	    /**
      * Subset of repositories that are hosted locally, ie. which URIs start with
@@ -144,16 +146,16 @@ public class LocalRepository implements Repository {
      * <p>
      * Modified by {@link #addRemoteRepository(URI)}.
      */
-	private LinkedHashSet<URI> fileRepositories = new LinkedHashSet<URI>();
+	private LinkedHashSet<URI> fileRepositories = new LinkedHashSet<>();
 
 	/**
 	 * Cache of jar files for given artifacts, supports pomFile(). File entries
 	 * can be both within the base repository, or from a local file://
 	 * repository
 	 */
-	private Map<Artifact, File> jarFiles = new HashMap<Artifact, File>();
+	private Map<Artifact, File> jarFiles = new HashMap<>();
 
-	private final List<RepositoryListener> listeners = new ArrayList<RepositoryListener>();
+	private final List<RepositoryListener> listeners = new ArrayList<>();
 
 	private ClassLoader parentLoader = null;
 
@@ -162,7 +164,7 @@ public class LocalRepository implements Repository {
 	 * can be both within the base repository, or from a local file://
 	 * repository
 	 */
-	private Map<Artifact, File> pomFiles = new HashMap<Artifact, File>();
+	private Map<Artifact, File> pomFiles = new HashMap<>();
 
 
 
@@ -170,16 +172,16 @@ public class LocalRepository implements Repository {
 	 * URI list of remote repository base URIs. Modified by
 	 * {@link #addRemoteRepository(URI)}
 	 */
-	private LinkedHashSet<URI> repositories = new LinkedHashSet<URI>();
+	private LinkedHashSet<URI> repositories = new LinkedHashSet<>();
 
-	private HashSet<URI> blacklistedRepositories = new HashSet<URI>();
+	private HashSet<URI> blacklistedRepositories = new HashSet<>();
 
 	/**
 	 * Map of artifact to artifact status
 	 */
-	private Map<ArtifactImpl, ArtifactStatus> status = new HashMap<ArtifactImpl, ArtifactStatus>();
+	private Map<ArtifactImpl, ArtifactStatus> status = new HashMap<>();
 
-	private Set<Artifact> systemArtifacts = new HashSet<Artifact>();
+	private Set<Artifact> systemArtifacts = new HashSet<>();
 
 	/**
 	 * Base directory for the local repository
@@ -244,11 +246,7 @@ public class LocalRepository implements Repository {
 		initialize();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see net.sf.taverna.raven.repository.impl.Repository#addArtifact(net.sf.taverna.raven.repository.impl.ArtifactImpl)
-	 */
+	@Override
 	public synchronized void addArtifact(Artifact a1) {
 		ArtifactImpl a = new ArtifactImpl(a1, this);
 		if (!status.containsKey(a)) {
@@ -261,6 +259,7 @@ public class LocalRepository implements Repository {
 	 * @deprecated Use Instead {@link #addRemoteRepository(URI)}
 	 * @see net.sf.taverna.raven.repository.impl.Repository#addRemoteRepository(java.net.URL)
 	 */
+	@Override
 	@Deprecated
 	public void addRemoteRepository(URL repositoryURL) {
 	    try {
@@ -269,6 +268,7 @@ public class LocalRepository implements Repository {
             throw new IllegalArgumentException("Invalid repository URI", e);
         }
 	}
+	@Override
 	public void addRemoteRepository(URI repositoryURI) {
 		repositories.add(repositoryURI);
 		if (repositoryURI.getScheme().equals("file")) {
@@ -280,6 +280,7 @@ public class LocalRepository implements Repository {
 	 * Add a new repository listener to be notified of status changes within
 	 * this Repository implementation
 	 */
+	@Override
 	public void addRepositoryListener(RepositoryListener l) {
 		synchronized (listeners) {
 			if (!listeners.contains(l)) {
@@ -293,6 +294,7 @@ public class LocalRepository implements Repository {
 	 * created it. If the classloader was not an instance of
 	 * LocalArtifactClassLoader then return null
 	 */
+	@Override
 	public Artifact artifactForClass(Class<?> c)
 			throws ArtifactNotFoundException {
 		synchronized (loaderMap) {
@@ -342,6 +344,7 @@ public class LocalRepository implements Repository {
 	/**
 	 * Return all Artifacts within this repository
 	 */
+	@Override
 	public synchronized List<Artifact> getArtifacts() {
 		return new ArrayList<Artifact>(status.keySet());
 	}
@@ -349,6 +352,7 @@ public class LocalRepository implements Repository {
 	/**
 	 * Return all artifacts with the specified ArtifactStatus
 	 */
+	@Override
 	public synchronized List<Artifact> getArtifacts(ArtifactStatus s) {
 		List<Artifact> result = new ArrayList<Artifact>();
 		for (Artifact a : status.keySet()) {
@@ -375,6 +379,7 @@ public class LocalRepository implements Repository {
 	 *             if the artifact is found but isn't involved in a download at
 	 *             the present time.
 	 */
+	@Override
 	public DownloadStatus getDownloadStatus(Artifact a)
 			throws ArtifactStateException, ArtifactNotFoundException {
 		if (status.containsKey(a)) {
@@ -390,12 +395,7 @@ public class LocalRepository implements Repository {
 		throw new ArtifactNotFoundException(a, "Cant find artifact for: " + a);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see net.sf.taverna.raven.repository.impl.Repository#getLoader(net.sf.taverna.raven.repository.impl.ArtifactImpl,
-	 *      java.lang.ClassLoader)
-	 */
+	@Override
 	public ClassLoader getLoader(Artifact a1, ClassLoader parent)
 			throws ArtifactNotFoundException, ArtifactStateException {
 		ArtifactImpl a = new ArtifactImpl(a1, this);
@@ -436,6 +436,7 @@ public class LocalRepository implements Repository {
 	 *         repository, or ArtifactStatus.Unknown if there is no such
 	 *         artifact
 	 */
+	@Override
 	public synchronized ArtifactStatus getStatus(Artifact a) {
 		if (!status.containsKey(a)) {
 			return ArtifactStatus.Unknown;
@@ -482,6 +483,7 @@ public class LocalRepository implements Repository {
 		}
 	}
 
+	@Override
 	public void removeRepositoryListener(RepositoryListener l) {
 		synchronized (listeners) {
 			listeners.remove(l);
@@ -498,11 +500,7 @@ public class LocalRepository implements Repository {
 		return sb.toString();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see net.sf.taverna.raven.repository.impl.Repository#update()
-	 */
+	@Override
 	public synchronized void update() {
 		// Clear black list for a new update
 		blacklistedRepositories.clear();
@@ -669,8 +667,10 @@ public class LocalRepository implements Repository {
 			}
 			deleteEmptyDirs(child);
 		}
-		// OK.. we've checked our subdirs.. they might have all be
-		// gone now, so let's see if we can disappear as well
+		/*
+		 * OK.. we've checked our subdirs.. they might have all be gone now, so
+		 * let's see if we can disappear as well
+		 */
 		File[] content = dir.listFiles();
 		if (content == null || content.length == 0) {
 			// logger.debug("Deleting " + dir);
@@ -717,6 +717,7 @@ public class LocalRepository implements Repository {
 	 *            The suffix of the file to fetch, either 'pom' or 'jar'
 	 * @throws ArtifactNotFoundException
 	 */
+	@SuppressWarnings("resource")
 	private void fetch(ArtifactImpl a, String suffix)
 			throws ArtifactNotFoundException {
 		if (artifactFile(a, "." + suffix, false).isFile()) {
@@ -789,9 +790,11 @@ public class LocalRepository implements Repository {
 								+ toFile);
 						break; // pomFailed
 					}
-					// Opened the stream so presumably the thing exists
-					// Create the appropriate directory structure within the
-					// local repository
+					/*
+					 * Opened the stream so presumably the thing exists Create
+					 * the appropriate directory structure within the local
+					 * repository
+					 */
 					if (toFile.exists()) {
 						logger.warn("Already existed, overwriting " + toFile);
 						toFile.delete();
@@ -825,22 +828,25 @@ public class LocalRepository implements Repository {
 				blacklistRepository(repositoryUri);
 			} catch (IOException e) {
 				logger.warn("Could not read " + a + " from " + repositoryUri, e);
-				// Ignore the exception, probably means we couldn't find the POM
-				// in the repository. If there are more repositories in the list
-				// this isn't necessarily an issue.
+				/*
+				 * Ignore the exception, probably means we couldn't find the POM
+				 * in the repository. If there are more repositories in the list
+				 * this isn't necessarily an issue.
+				 */
 			} finally {
-				if (is != null) {
-					try {
+				try {
+					if (is != null)
 						is.close();
-					} catch (IOException e) {
-						// ignore
-					}
+				} catch (IOException e) {
+					// ignore
 				}
 			}
 		}
 
-		// No appropriate POM found in any of the repositories so throw an
-		// exception
+		/*
+		 * No appropriate POM found in any of the repositories so throw an
+		 * exception
+		 */
 		setStatus(a, "pom".equals(suffix) ? ArtifactStatus.PomFailed
 				: ArtifactStatus.JarFailed);
 		dlstatus.remove(a);
@@ -872,17 +878,21 @@ public class LocalRepository implements Repository {
 	 */
 	private boolean fetchLocal(ArtifactImpl artifact, String suffix) {
 		String repositoryPath = repositoryPath(artifact, suffix);
-		// Let's see if any of our file:// repositories have it
-		// check if artifact is defined as a system artifact in the profile, if
-		// one is defined.
+		/*
+		 * Let's see if any of our file:// repositories have it check if
+		 * artifact is defined as a system artifact in the profile, if one is
+		 * defined.
+		 */
 		ProfileFactory profileFactory = ProfileFactory.getInstance();
 		if (profileFactory.isProfileDefined()) {
 			Set<Artifact> systemArtifacts = profileFactory.getProfile()
 					.getSystemArtifacts();
 			if (systemArtifacts.contains(artifact)) {
-				// Need to copy it so that the system classloader can
-				// find it (We can't interact with it here as Raven shouldn't
-				// depend on Taverna's BootstrapClassLoader)
+				/*
+				 * Need to copy it so that the system classloader can find it
+				 * (We can't interact with it here as Raven shouldn't depend on
+				 * Taverna's BootstrapClassLoader)
+				 */
 				// TODO: something like SystemClassLoaderSPI.addURL(file)
 				return false;
 			}
@@ -1045,7 +1055,8 @@ public class LocalRepository implements Repository {
 	}
 
 	/**
-	 * Queries the xml, and generates the filename which is artifact-<version>-<timestamp>-<buildnumber>.suffix
+	 * Queries the xml, and generates the filename which is
+	 * <tt>artifact-&lt;version>-&lt;timestamp>-&lt;buildnumber>.suffix</tt>
 	 * 
 	 * @param a
 	 * @param doc
@@ -1111,13 +1122,13 @@ public class LocalRepository implements Repository {
 		if (status.containsKey(a) && status.get(a) != newStatus) {
 			if (newStatus == ArtifactStatus.Ready)
 				logger.debug("Artifact " + a + " now exporting API");
+			else
+				logger.debug("Artifact " + a + " entered state " + newStatus);
 			synchronized (listeners) {
 				ArtifactStatus oldStatus = status.get(a);
 				status.put(a, newStatus);
-				for (RepositoryListener l : new ArrayList<RepositoryListener>(
-						listeners)) {
+				for (RepositoryListener l : new ArrayList<>(listeners))
 					l.statusChanged(a, oldStatus, newStatus);
-				}
 			}
 		}
 	}
@@ -1166,9 +1177,9 @@ public class LocalRepository implements Repository {
 	}
 
 	private static class AcceptDirectoryFilter implements FileFilter {
+		@Override
 		public boolean accept(File f) {
 			return f.isDirectory();
 		}
 	}
-
 }

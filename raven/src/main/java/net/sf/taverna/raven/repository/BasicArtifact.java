@@ -69,6 +69,7 @@ public class BasicArtifact implements Artifact {
 	 * Compare with another object. If the other instance is an Artifact, it
 	 * will be compared by group, artifact and version in that order.
 	 */
+	@Override
 	public int compareTo(Object other) {
 		if (super.equals(other)) {
 			return 0;
@@ -113,14 +114,17 @@ public class BasicArtifact implements Artifact {
 				.equals(otherDep.getVersion()));
 	}
 
+	@Override
 	public String getArtifactId() {
 		return artifactId;
 	}
 
+	@Override
 	public String getGroupId() {
 		return groupId;
 	}
 
+	@Override
 	public String getVersion() {
 		return version;
 	}

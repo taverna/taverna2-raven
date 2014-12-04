@@ -44,6 +44,7 @@ import net.sf.taverna.raven.spi.ProfileFactory;
  * @author Tom Oinn
  * @author Matthew Pocock
  */
+@SuppressWarnings({ "rawtypes", "deprecation" })
 public class Loader {
 
 	private static final String INFRASTRUCTURE_GROUPID = "net.sf.taverna.t2.infrastructure";
@@ -76,7 +77,6 @@ public class Loader {
 	 * @throws ArtifactStateException
 	 * @throws ClassNotFoundException
 	 */
-	@SuppressWarnings("unchecked")
 	public static Class doRavenMagic(File localRepositoryLocation,
 			URL[] remoteRepositories, String targetGroup,
 			String targetArtifact, String targetVersion, String className,
@@ -87,9 +87,8 @@ public class Loader {
 		Repository repository = LocalRepository
 				.getRepository(localRepositoryLocation);
 
-		for (URL remoteLocation : remoteRepositories) {
+		for (URL remoteLocation : remoteRepositories)
 			repository.addRemoteRepository(remoteLocation);
-		}
 
 		Artifact artifact = new BasicArtifact(targetGroup, targetArtifact,
 				targetVersion);
@@ -134,7 +133,6 @@ public class Loader {
 	 * @throws ArtifactStateException
 	 * @throws ClassNotFoundException
 	 */
-	@SuppressWarnings("unchecked")
 	public static Class doRavenMagic(String ravenVersion,
 			File localRepositoryLocation, URL[] remoteRepositories,
 			String targetGroup, String targetArtifact, String targetVersion,
@@ -142,16 +140,14 @@ public class Loader {
 			throws ArtifactNotFoundException, ArtifactStateException,
 			ClassNotFoundException {
 		SplashScreen splash = null;
-		if (!GraphicsEnvironment.isHeadless() && splashScreenURL != null) {
+		if (!GraphicsEnvironment.isHeadless() && splashScreenURL != null)
 			splash = SplashScreen.getSplashScreen(splashScreenURL);
-		}
 
 		final Repository repository = LocalRepository
 				.getRepository(localRepositoryLocation);
 
-		for (URL remoteLocation : remoteRepositories) {
+		for (URL remoteLocation : remoteRepositories)
 			repository.addRemoteRepository(remoteLocation);
-		}
 		Artifact artifact = new BasicArtifact(targetGroup, targetArtifact,
 				targetVersion);
 		repository.addArtifact(artifact);
@@ -161,14 +157,11 @@ public class Loader {
 		// add any profile artifacts, if defined, so that all required artifacts
 		// get loaded at startup
 		Profile profile = ProfileFactory.getInstance().getProfile();
-		if (profile != null) {
-			for (Artifact a : profile.getArtifacts()) {
+		if (profile != null)
+			for (Artifact a : profile.getArtifacts())
 				repository.addArtifact(a);
-			}
-		}
-		if (splash != null) {
+		if (splash != null)
 			splash.listenToRepository(repository);
-		}
 		repository.update();
 		if (splash != null) {
 			splash.removeListener();

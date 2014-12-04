@@ -38,6 +38,7 @@ public class NodeListIterable implements Iterable<Node> {
 		this.nodeList = nodeList;
 	}
 
+	@Override
 	public Iterator<Node> iterator() {
 		return new NodeListIterator();
 	}
@@ -45,12 +46,14 @@ public class NodeListIterable implements Iterable<Node> {
 	private class NodeListIterator implements Iterator<Node> {
 		private int nextPosition = 0;
 
+		@Override
 		public boolean hasNext() {
 			synchronized (nodeList) {
 				return nextPosition < nodeList.getLength();
 			}
 		}
 
+		@Override
 		public Node next() throws NoSuchElementException {
 			Node result;
 			synchronized (nodeList) {
@@ -63,6 +66,7 @@ public class NodeListIterable implements Iterable<Node> {
 			return result;
 		}
 
+		@Override
 		public void remove() throws UnsupportedOperationException {
 			throw new UnsupportedOperationException();
 		}

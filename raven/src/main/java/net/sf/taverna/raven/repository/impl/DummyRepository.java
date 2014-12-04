@@ -95,6 +95,7 @@ public class DummyRepository implements Repository {
 
 	private static List<Artifact> artifacts = new ArrayList<Artifact>();
 
+	@Override
 	public void addArtifact(Artifact a) {
 
 	}
@@ -104,23 +105,28 @@ public class DummyRepository implements Repository {
     public void addRemoteRepository(URI repositoryURI) {
     }
 
+	@Override
 	public void addRemoteRepository(URL repositoryURL) {
 
 	}
 
+	@Override
 	public void addRepositoryListener(RepositoryListener l) {
 
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
+	@SuppressWarnings("rawtypes")
 	public Artifact artifactForClass(Class c) throws ArtifactNotFoundException {
 		return null;
 	}
 
+	@Override
 	public List<Artifact> getArtifacts() {
 		return artifacts;
 	}
 
+	@Override
 	public List<Artifact> getArtifacts(ArtifactStatus s) {
 		// adds a dummy artifact, tricks SPIRegistry into looking up SPI
 		// registered items (which it gets from the system classpath).
@@ -141,6 +147,7 @@ public class DummyRepository implements Repository {
 			return new ArrayList<Artifact>();
 	}
 
+	@Override
 	public DownloadStatus getDownloadStatus(Artifact a)
 			throws ArtifactStateException, ArtifactNotFoundException {
 		DownloadStatusImpl status = new DownloadStatusImpl(0);
@@ -148,6 +155,7 @@ public class DummyRepository implements Repository {
 		return status;
 	}
 
+	@Override
 	public ClassLoader getLoader(Artifact a, ClassLoader parent)
 			throws ArtifactNotFoundException, ArtifactStateException {
 		ClassLoader cl = getClass().getClassLoader();
@@ -157,14 +165,17 @@ public class DummyRepository implements Repository {
 		return ClassLoader.getSystemClassLoader();
 	}
 
+	@Override
 	public ArtifactStatus getStatus(Artifact a) {
 		return ArtifactStatus.Ready;
 	}
 
+	@Override
 	public void removeRepositoryListener(RepositoryListener l) {
 
 	}
 
+	@Override
 	public void update() {
 
 	}

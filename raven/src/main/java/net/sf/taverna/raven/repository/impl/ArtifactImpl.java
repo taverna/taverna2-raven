@@ -62,7 +62,6 @@ import org.xml.sax.SAXException;
  * @author Stian Soiland-Reyes
  */
 public class ArtifactImpl extends BasicArtifact {
-	
 	private static Log logger = Log.getLogger(ArtifactImpl.class);
 
 	/**
@@ -230,9 +229,10 @@ public class ArtifactImpl extends BasicArtifact {
 					}
 				}
 
-				// Test for scope, if scope is 'provided' or 'test' then
-				// we don't add it as a dependency as this would force a
-				// download.
+				/*
+				 * Test for scope, if scope is 'provided' or 'test' then we
+				 * don't add it as a dependency as this would force a download.
+				 */
 				boolean downloadableScope = true;
 				List<Node> scopeNodeList = findElements(node, "scope");
 				if (!scopeNodeList.isEmpty()) {
@@ -249,9 +249,8 @@ public class ArtifactImpl extends BasicArtifact {
 				if (!optional && downloadableScope) {
 					ArtifactImpl dependency = new ArtifactImpl(groupId,
 							artifactId, version, repository);
-					if (!depExclusions.isEmpty()) {
+					if (!depExclusions.isEmpty())
 						dependency.setExclusions(depExclusions);
-					}
 					result.add(dependency);
 				} else {
 					// Log the optional dependency here if needed
@@ -321,9 +320,8 @@ public class ArtifactImpl extends BasicArtifact {
 			return;
 		}
 		List<Node> elementList = findElements(document, "parent");
-		if (elementList.isEmpty()) {
+		if (elementList.isEmpty())
 			return;
-		}
 		Node parentNode = elementList.iterator().next();
 		Node n = findElements(parentNode, "groupId").iterator().next();
 		String parentGroupId = n.getFirstChild().getNodeValue().trim();
@@ -334,7 +332,7 @@ public class ArtifactImpl extends BasicArtifact {
 		parentArtifact = new ArtifactImpl(parentGroupId, parentArtifactId,
 				parentVersion, repository);
 		repository.addArtifact(parentArtifact);
-		if (repository.getStatus(parentArtifact).equals(ArtifactStatus.Queued)) {
+		if (repository.getStatus(parentArtifact).equals(ArtifactStatus.Queued))
 			try {
 				// Force a fetch of the pom file
 				repository.forcePom(parentArtifact);
@@ -343,7 +341,6 @@ public class ArtifactImpl extends BasicArtifact {
 						+ parentArtifact + "(referenced from " + pomFile + ")", e);
 				return;
 			}
-		}
 		parentArtifact.checkParent(repository.pomFile(parentArtifact));
 	}
 
@@ -377,15 +374,13 @@ public class ArtifactImpl extends BasicArtifact {
 	 * @return
 	 */
 	private List<Node> findElements(Node fromnode, String name) {
-		List<Node> list = new ArrayList<Node>();
-		for (Node node : new NodeListIterable(fromnode.getChildNodes())) {
+		List<Node> list = new ArrayList<>();
+		for (Node node : new NodeListIterable(fromnode.getChildNodes()))
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				if (name.equals(node.getNodeName())) {
+				if (name.equals(node.getNodeName()))
 					list.add(node);
-				}
 				list.addAll(findElements(node, name));
 			}
-		}
 		return list;
 	}
 
@@ -400,15 +395,14 @@ public class ArtifactImpl extends BasicArtifact {
 	 * @return
 	 */
 	private List<Node> findElements(Node fromNode, String[] names) {
-		List<Node> fromNodes = new ArrayList<Node>();
+		List<Node> fromNodes = new ArrayList<>();
 		fromNodes.add(fromNode);
-		List<Node> foundNodes = new ArrayList<Node>();
+		List<Node> foundNodes = new ArrayList<>();
 		for (String name : names) {
-			for (Node from : fromNodes) {
+			for (Node from : fromNodes)
 				foundNodes.addAll(findImmediateElements(from, name));
-			}
 			fromNodes = foundNodes;
-			foundNodes = new ArrayList<Node>();
+			foundNodes = new ArrayList<>();
 		}
 		return fromNodes;
 	}
@@ -423,13 +417,12 @@ public class ArtifactImpl extends BasicArtifact {
 	 */
 	private List<Node> findImmediateElements(Node fromnode, String name) {
 		NodeList nodelist = fromnode.getChildNodes();
-		List<Node> list = new ArrayList<Node>();
+		List<Node> list = new ArrayList<>();
 		for (int i = 0; i < nodelist.getLength(); i++) {
 			Node node = nodelist.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				if (name.equals(node.getNodeName())) {
+				if (name.equals(node.getNodeName()))
 					list.add(node);
-				}
 				// list.addAll(findElements(node, name));
 			}
 		}
@@ -475,24 +468,23 @@ public class ArtifactImpl extends BasicArtifact {
 	 * @throws ParserConfigurationException
 	 * @throws SAXException
 	 */
-	@SuppressWarnings("unchecked")
 	private Properties getProperties() throws IOException,
 			MalformedURLException, ParserConfigurationException, SAXException {
 		if (properties != null) {
-			// Note - not synchronized - but no big harm in two threads reading
-			// the properties
-			// at the same time because we don't assing until the end
+			/*
+			 * Note - not synchronized - but no big harm in two threads reading
+			 * the properties at the same time because we don't assign until the
+			 * end
+			 */
 			return properties;
 		}
 		File pomFile = getPomFile();
-		if (pomFile == null) {
+		if (pomFile == null)
 			throw new IOException("Can't find pom file for " + this);
-		}
 
 		Properties props = getCalculatedProperties();
-		if (parentArtifact != null) {
+		if (parentArtifact != null)
 			props.putAll(parentArtifact.getProperties());
-		}
 		props.putAll(getCalculatedProperties());
 
 		Document document = readXML(pomFile);
@@ -532,6 +524,7 @@ public class ArtifactImpl extends BasicArtifact {
 
 	private static Map<String, SoftReference<Document>> readXMLCache = new ConcurrentHashMap<String, SoftReference<Document>>();
 	
+	@SuppressWarnings("unused")
 	private Document readXML(URL url) throws ParserConfigurationException,
 			SAXException, IOException {
 		// Don't use URL as a key directly, 

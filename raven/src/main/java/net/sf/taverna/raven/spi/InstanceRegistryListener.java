@@ -28,7 +28,7 @@ package net.sf.taverna.raven.spi;
  */
 public interface InstanceRegistryListener {
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public abstract void instanceRegistryUpdated(InstanceRegistry registry);
 
 }

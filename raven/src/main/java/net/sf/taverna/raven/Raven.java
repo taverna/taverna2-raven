@@ -96,6 +96,7 @@ public class Raven {
 
 		if (debug) {
 			listener = new RepositoryListener() {
+				@Override
 				public void statusChanged(Artifact artifact,
 						ArtifactStatus oldStatus, ArtifactStatus newStatus) {
 					System.err.println("Artifact " + artifact
@@ -105,6 +106,7 @@ public class Raven {
 			};
 		} else {
 			listener = new RepositoryListener() {
+				@Override
 				public void statusChanged(Artifact artifact,
 						ArtifactStatus oldStatus, ArtifactStatus newStatus) {
 					// noop

@@ -67,19 +67,17 @@ class VersionComparator implements Comparator<Artifact> {
 	protected VersionComparator() {
 	}
 
+	@Override
 	public int compare(Artifact a, Artifact b) {
 		int diff = a.getGroupId().compareTo(b.getGroupId());
-		if (diff != 0) {
+		if (diff != 0)
 			return diff;
-		}
 		diff = a.getArtifactId().compareTo(b.getArtifactId());
-		if (diff != 0) {
+		if (diff != 0)
 			return diff;
-		}
 		// Same artifact, check version. By string first.
-		if (a.getVersion().equals(b.getVersion())) {
+		if (a.getVersion().equals(b.getVersion()))
 			return 0;
-		}
 		// Numerically check the versions
 		return compareVersions(a.getVersion(), b.getVersion());
 	}
@@ -88,24 +86,21 @@ class VersionComparator implements Comparator<Artifact> {
 		String[] va = a.split("\\.");
 		String[] vb = b.split("\\.");
 		for (int i = 0; i < va.length || i < vb.length; i++) {
-			if (i == va.length) {
+			if (i == va.length)
 				// vb is more specific, ie a < b
 				return -1;
-			} else if (i == vb.length) {
+			else if (i == vb.length)
 				// va is more specific, ie a > b
 				return 1;
-			}
 			String ca = va[i];
 			String cb = vb[i];
-			if (ca.equals(cb)) {
+			if (ca.equals(cb))
 				continue; // Test next digit
-			}
 			try {
 				int ia = Integer.parseInt(ca);
 				int ib = Integer.parseInt(cb);
-				if (ia == ib) {
+				if (ia == ib)
 					continue; // Test next digit
-				}
 				return ia - ib;
 			} catch (NumberFormatException ex) {
 				return ca.compareTo(cb);

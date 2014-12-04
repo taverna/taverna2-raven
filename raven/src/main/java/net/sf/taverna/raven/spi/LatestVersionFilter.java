@@ -37,28 +37,27 @@ import net.sf.taverna.raven.repository.Artifact;
  * 
  */
 public class LatestVersionFilter extends AbstractArtifactFilter {
-
+	@Override
 	public Set<Artifact> filter(Set<Artifact> artifacts) {
-		SortedSet<Artifact> sortedArtifacts = new TreeSet<Artifact>(
+		SortedSet<Artifact> sortedArtifacts = new TreeSet<>(
 				VersionComparator.getInstance());
 		sortedArtifacts.addAll(artifacts);
-		Set<Artifact> results = new HashSet<Artifact>();
+		Set<Artifact> results = new HashSet<>();
 		Artifact previous = null;
 		for (Artifact artifact : sortedArtifacts) {
 			if (previous != null
 					&& (previous.getGroupId() != artifact.getGroupId() || previous
-							.getArtifactId() != artifact.getArtifactId())) {
-				// Different artifact than before, so latest
-				// is the latest version of the previous artifact
+							.getArtifactId() != artifact.getArtifactId()))
+				/*
+				 * Different artifact than before, so latest is the latest
+				 * version of the previous artifact
+				 */
 				results.add(previous);
-			}
 			previous = artifact;
 		}
 		// And add the last artifact (unless our set was empty)
-		if (previous != null) {
+		if (previous != null)
 			results.add(previous);
-		}
 		return results;
 	}
-
 }

@@ -87,15 +87,15 @@ import org.xml.sax.SAXException;
 public class Profile extends AbstractArtifactFilter {
 	private static Log logger = Log.getLogger(Profile.class);
 
-	private Set<Artifact> artifacts = new HashSet<Artifact>();
-	private Set<Artifact> systemArtifacts = new HashSet<Artifact>();
+	private Set<Artifact> artifacts = new HashSet<>();
+	private Set<Artifact> systemArtifacts = new HashSet<>();
 
 	private boolean strict;
 
 	private String version;
 	private String name;
 
-	private Map<List<Object>, Artifact> discoverArtifactCache = new Hashtable<List<Object>, Artifact>();
+	private Map<List<Object>, Artifact> discoverArtifactCache = new Hashtable<>();
 
 	public Profile(boolean strict) {
 		this.strict = strict;
@@ -149,9 +149,9 @@ public class Profile extends AbstractArtifactFilter {
 		// determine the version if available
 		Node profileVersionAttribute = document.getDocumentElement()
 				.getAttributes().getNamedItem("version");
-		if (profileVersionAttribute != null) {
+		if (profileVersionAttribute != null)
 			version = profileVersionAttribute.getNodeValue();
-		} else {
+		else {
 			logger.warn("Profile document contains no version.");
 			version = null;
 		}
@@ -159,9 +159,9 @@ public class Profile extends AbstractArtifactFilter {
 		// determine the name if available
 		Node profileNameAttribute = document.getDocumentElement()
 				.getAttributes().getNamedItem("name");
-		if (profileNameAttribute != null) {
+		if (profileNameAttribute != null)
 			name = profileNameAttribute.getNodeValue();
-		} else {
+		else {
 			logger.warn("Profile document contains no name.");
 			name = null;
 		}
@@ -204,19 +204,16 @@ public class Profile extends AbstractArtifactFilter {
 					Node profileNode = null;
 					boolean enabled = false;
 					while (child != null) {
-						if (child.getNodeName().equals("enabled")) {
+						if (child.getNodeName().equals("enabled"))
 							enabled = child.getTextContent() != null
-									&& child.getTextContent().trim().equals(
-											"true");
-						}
-						if (child.getNodeName().equals("profile")) {
+									&& child.getTextContent().trim()
+											.equals("true");
+						if (child.getNodeName().equals("profile"))
 							profileNode = child;
-						}
 						child = child.getNextSibling();
 					}
-					if (enabled && profileNode != null) {
+					if (enabled && profileNode != null)
 						readProfileArtifactNodes(profileNode.getChildNodes());
-					}
 				}
 			} catch (SAXException e) {
 				logger.error("Error reading plugin xml", e);
@@ -272,25 +269,22 @@ public class Profile extends AbstractArtifactFilter {
 			Repository repository) {
 		List<Object> cacheKey = Arrays.asList(groupId, artifactId, repository);
 		Artifact result = discoverArtifactCache.get(cacheKey);
-		if (result != null) {
+		if (result != null)
 			return result;
-		}
 		
-		List<Artifact> matches = new ArrayList<Artifact>();
+		List<Artifact> matches = new ArrayList<>();
 
 		// The profile will decide if it states the artifact directly
-		for (Artifact artifact : artifacts) {
+		for (Artifact artifact : artifacts)
 			if (artifact.getArtifactId().equals(artifactId)
-					&& artifact.getGroupId().equals(groupId)) {
+					&& artifact.getGroupId().equals(groupId))
 				matches.add(artifact);
-			}
-		}
 		if (matches.isEmpty() && repository != null) {
 			// We'll need to dig deeper
 
 			// Build a map to quickly look up ArtifactImpl's
-			Map<Artifact, ArtifactImpl> repArtifacts = new HashMap<Artifact, ArtifactImpl>();
-			Set<Artifact> search = new HashSet<Artifact>();
+			Map<Artifact, ArtifactImpl> repArtifacts = new HashMap<>();
+			Set<Artifact> search = new HashSet<>();
 			for (Artifact artifact : repository.getArtifacts()) {
 				if (!(artifact instanceof ArtifactImpl)) {
 					logger.warn("Not instance of ArtifactImpl: " + artifact);
@@ -300,34 +294,35 @@ public class Profile extends AbstractArtifactFilter {
 				search.add(artifact);
 			}
 			
-			Set<Artifact> visitted = new HashSet<Artifact>();
+			Set<Artifact> visited = new HashSet<>();
 			
 			while (!search.isEmpty()) {
 				Artifact artifact = search.iterator().next();
 				search.remove(artifact);
-				visitted.add(artifact);
+				visited.add(artifact);
 
 				if (artifact.getArtifactId().equals(artifactId)
 						&& artifact.getGroupId().equals(groupId)) {
 					matches.add(artifact);
-				} else {
-					// Search it's children 
-					ArtifactImpl artifactImpl = repArtifacts.get(artifact);
-					if (artifactImpl == null) {
-						logger.info("Unknown artifact " + artifact);
-						continue;
-					}
-					Set<Artifact> newDependencies;
-					try {
-						newDependencies = new HashSet<Artifact>(artifactImpl
-								.getDependencies());
-					} catch (ArtifactStateException e) {
-						logger.info("Invalid state for artifact: " + artifact);
-						continue;
-					}
-					newDependencies.removeAll(visitted);
-					search.addAll(newDependencies);
+					continue;
 				}
+
+				// Search it's children 
+				ArtifactImpl artifactImpl = repArtifacts.get(artifact);
+				if (artifactImpl == null) {
+					logger.info("Unknown artifact " + artifact);
+					continue;
+				}
+				Set<Artifact> newDependencies;
+				try {
+					newDependencies = new HashSet<Artifact>(artifactImpl
+							.getDependencies());
+				} catch (ArtifactStateException e) {
+					logger.info("Invalid state for artifact: " + artifact);
+					continue;
+				}
+				newDependencies.removeAll(visited);
+				search.addAll(newDependencies);
 			}
 		}
 		if (!matches.isEmpty()) {
@@ -349,18 +344,20 @@ public class Profile extends AbstractArtifactFilter {
 	 * 
 	 * @return filtered list of Artifact objects
 	 */
+	@Override
 	public Set<Artifact> filter(Set<Artifact> intersecting) {
-		Set<Artifact> result = new HashSet<Artifact>();
+		Set<Artifact> result = new HashSet<>();
 		for (Artifact artifact : intersecting) {
 			if (artifacts.contains(artifact)) {
 				// Exact match to an entry in the profile so include it
 				result.add(artifact);
 			} else if (!strict) {
-				// We will include the artifact as long as we don't have it in
-				// another version
-				if (!containsOtherVersion(artifact)) {
+				/*
+				 * We will include the artifact as long as we don't have it in
+				 * another version
+				 */
+				if (!containsOtherVersion(artifact))
 					result.add(artifact);
-				}
 			}
 		}
 		return result;
@@ -372,7 +369,7 @@ public class Profile extends AbstractArtifactFilter {
 	 * @return a copy of the internal {@link Set} of {@link Artifact}.
 	 */
 	public Set<Artifact> getArtifacts() {
-		return new HashSet<Artifact>(artifacts);
+		return new HashSet<>(artifacts);
 	}
 
 	/**
@@ -393,7 +390,7 @@ public class Profile extends AbstractArtifactFilter {
 	 * @return a copy of the internal Set of system Artifacts
 	 */
 	public Set<Artifact> getSystemArtifacts() {
-		return new HashSet<Artifact>(systemArtifacts);
+		return new HashSet<>(systemArtifacts);
 	}
 
 	/**
@@ -401,9 +398,8 @@ public class Profile extends AbstractArtifactFilter {
 	 * not defined
 	 */
 	public String getVersion() {
-		if (version == null) {
+		if (version == null)
 			return "NO-VERSION";
-		}
 		return version;
 	}
 
@@ -447,12 +443,10 @@ public class Profile extends AbstractArtifactFilter {
 		Document doc = builder.newDocument();
 		Element element = doc.createElement("profile");
 		doc.appendChild(element);
-		if (version != null) {
+		if (version != null)
 			element.setAttribute("version", version);
-		}
-		if (name != null) {
+		if (name != null)
 			element.setAttribute("name", name);
-		}
 		for (Artifact artifact : getArtifacts()) {
 			String groupId = artifact.getGroupId();
 			String artifactId = artifact.getArtifactId();
@@ -462,9 +456,8 @@ public class Profile extends AbstractArtifactFilter {
 			artifactElement.setAttribute("groupId", groupId);
 			artifactElement.setAttribute("artifactId", artifactId);
 			artifactElement.setAttribute("version", version);
-			if (systemArtifacts.contains(artifact)) {
+			if (systemArtifacts.contains(artifact))
 				artifactElement.setAttribute("system", "true");
-			}
 			element.appendChild(artifactElement);
 		}
 
@@ -483,12 +476,10 @@ public class Profile extends AbstractArtifactFilter {
 	 *         profile
 	 */
 	private boolean containsOtherVersion(Artifact artifact) {
-		for (Artifact existing : artifacts) {
+		for (Artifact existing : artifacts)
 			if (existing.getArtifactId().equals(artifact.getArtifactId())
-					&& existing.getGroupId().equals(artifact.getGroupId())) {
+					&& existing.getGroupId().equals(artifact.getGroupId()))
 				return true;
-			}
-		}
 		return false;
 	}
 
@@ -501,19 +492,16 @@ public class Profile extends AbstractArtifactFilter {
 				Node gnode = atts.getNamedItem("groupId");
 				Node anode = atts.getNamedItem("artifactId");
 				Node vnode = atts.getNamedItem("version");
-				if (gnode == null || anode == null || vnode == null) {
+				if (gnode == null || anode == null || vnode == null)
 					throw new InvalidProfileException(
 							"Entries must contain groupId, artifactId, version");
-				}
 				Artifact artifact = new BasicArtifact(gnode.getNodeValue(),
 						anode.getNodeValue(), vnode.getNodeValue());
 				artifacts.add(artifact);
 				Node snode = atts.getNamedItem("system");
-				if (snode != null && "true".equals(snode.getNodeValue())) {
+				if (snode != null && "true".equals(snode.getNodeValue()))
 					systemArtifacts.add(artifact);
-				}
 			}
 		}
 	}
-
 }

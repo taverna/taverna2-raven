@@ -21,38 +21,35 @@
 package net.sf.taverna.raven.spi;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractArtifactFilter implements ArtifactFilter {
-
-	private ArrayList<ArtifactFilterListener> artifactFilterListeners = new ArrayList<ArtifactFilterListener>();
+	private List<ArtifactFilterListener> artifactFilterListeners = new ArrayList<>();
 
 	public AbstractArtifactFilter() {
 		super();
 	}
 
+	@Override
 	public void addArtifactFilterListener(ArtifactFilterListener listener) {
 		synchronized (artifactFilterListeners) {
-			if (!artifactFilterListeners.contains(listener)) {
+			if (!artifactFilterListeners.contains(listener))
 				artifactFilterListeners.add(listener);
-			}
 		}
 	}
 
+	@Override
 	public void removeArtifactFilterListener(ArtifactFilterListener listener) {
 		synchronized (artifactFilterListeners) {
 			artifactFilterListeners.remove(listener);
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	protected void fireFilterChanged(ArtifactFilter filter) {
 		synchronized (artifactFilterListeners) {
-			ArrayList<ArtifactFilterListener> listeners = (ArrayList<ArtifactFilterListener>) artifactFilterListeners
-					.clone();
-			for (ArtifactFilterListener listener : listeners) {
+			List<ArtifactFilterListener> listeners = new ArrayList<>(artifactFilterListeners);
+			for (ArtifactFilterListener listener : listeners)
 				listener.filterChanged(filter);
-			}
 		}
 	}
-
 }

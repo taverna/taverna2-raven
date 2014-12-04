@@ -34,13 +34,14 @@ package net.sf.taverna.raven.log;
  * 
  */
 public interface LogInterface {
-	@SuppressWarnings("unchecked")
+	
 	/**
 	 * Get a new instance of this logger to be used by class c.
 	 * 
 	 * @param c Class that is to use logger.
 	 * 
 	 */
+	@SuppressWarnings("rawtypes")
 	public LogInterface getLogger(Class c);
 
 	/**
