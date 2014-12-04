@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.net.Authenticator;
 import java.net.URL;
 
+import org.apache.log4j.Logger;
+
 import net.sf.taverna.raven.SplashScreen;
 import net.sf.taverna.raven.appconfig.ApplicationConfig;
 import net.sf.taverna.raven.appconfig.ApplicationRuntime;
@@ -53,6 +55,7 @@ import net.sf.taverna.raven.spi.SpiRegistry;
  * 
  */
 public class Launcher {
+	private static Logger logger = Logger.getLogger(Launcher.class);
 
 	/**
 	 * Call the "real" application
@@ -98,14 +101,17 @@ public class Launcher {
 		// the plugins
 		@SuppressWarnings("unused")
 		PluginManager pluginMan = PluginManager.getInstance();
-
+		logger.info("looking for " + className + " as an instance of " + Launchable.class);
 		SpiRegistry launchableSpi = new SpiRegistry(localRepository,
 				Launchable.class.getCanonicalName(), appRuntime
 						.getClassLoader());
 		for (Class<?> launchableClass : launchableSpi) {
+			logger.debug("considering " + launchableClass
+					+ " from classloader " + launchableClass.getClassLoader());
 			if (launchableClass.getCanonicalName().equals(className)) {
 				Launchable launchable = (Launchable) launchableClass
 						.newInstance();
+				logger.debug("found the Launchable");
 				return launchable;
 			}
 		}

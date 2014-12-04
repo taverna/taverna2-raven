@@ -1109,6 +1109,8 @@ public class LocalRepository implements Repository {
 
 	private synchronized void setStatus(ArtifactImpl a, ArtifactStatus newStatus) {
 		if (status.containsKey(a) && status.get(a) != newStatus) {
+			if (newStatus == ArtifactStatus.Ready)
+				logger.debug("Artifact " + a + " now exporting API");
 			synchronized (listeners) {
 				ArtifactStatus oldStatus = status.get(a);
 				status.put(a, newStatus);
