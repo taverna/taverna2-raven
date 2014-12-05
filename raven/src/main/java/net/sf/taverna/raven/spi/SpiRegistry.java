@@ -146,13 +146,29 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 		repository.removeRepositoryListener(rlistener);
 	}
 
+	private volatile boolean firstFetch = true;
 	/**
 	 * Get the Class objects for all implementations of this SPI currently known
 	 */
-	public synchronized List<Class> getClasses() {
-		if (implementations == null)
-			updateRegistry();
-		return implementations;
+	public List<Class> getClasses() {
+		if (firstFetch) {
+			firstFetch = false;
+			List<Artifact> failed = new ArrayList<>();
+			for (Artifact a : repository.getArtifacts())
+				if (!repository.getStatus(a).equals(ArtifactStatus.Ready))
+					failed.add(a);
+			if (!failed.isEmpty())
+				logger.warn("some artifacts are missing from search for "
+						+ classname + ": " + failed);
+			else
+				logger.info("full set of artifacts will be searched for "
+						+ classname);
+		}
+		synchronized (this) {
+			if (implementations == null)
+				updateRegistry();
+			return implementations;
+		}
 	}
 
 	/**
