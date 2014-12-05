@@ -35,6 +35,7 @@ import java.util.Set;
 
 import net.sf.taverna.raven.RavenException;
 import net.sf.taverna.raven.log.Log;
+import net.sf.taverna.raven.log.LogInterface.Priority;
 import net.sf.taverna.raven.repository.Artifact;
 import net.sf.taverna.raven.repository.ArtifactStatus;
 import net.sf.taverna.raven.repository.Repository;
@@ -141,8 +142,7 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 
 	@Override
 	public void finalize() {
-		// FIXME: Will this ever work? rlistener references repository
-		// and we reference rlistener...
+		// FIXME: Will this ever work? rlistener references repository and we reference rlistener...
 		repository.removeRepositoryListener(rlistener);
 	}
 
@@ -154,12 +154,19 @@ public class SpiRegistry implements Iterable<Class>, ArtifactFilterListener {
 		if (firstFetch) {
 			firstFetch = false;
 			List<Artifact> failed = new ArrayList<>();
-			for (Artifact a : repository.getArtifacts())
-				if (!repository.getStatus(a).equals(ArtifactStatus.Ready))
+			Priority p = Priority.INFO;
+			for (Artifact a : repository.getArtifacts()) {
+				ArtifactStatus s = repository.getStatus(a);
+				if (!s.equals(ArtifactStatus.Ready)
+						&& !s.equals(ArtifactStatus.PomNonJar)) {
 					failed.add(a);
+					if (a.getGroupId().startsWith("net.sf.taverna"))
+						p = Priority.WARN;
+				}
+			}
 			if (!failed.isEmpty())
-				logger.warn("some artifacts are missing from search for "
-						+ classname + ": " + failed);
+				logger.log(p, "some artifacts are missing from search for "
+						+ classname + ": " + failed, null);
 			else
 				logger.info("full set of artifacts will be searched for "
 						+ classname);
