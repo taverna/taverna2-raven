@@ -55,44 +55,47 @@ package net.sf.taverna.raven.profile;
 
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 
 import org.jdom.Element;
 
 public class ProfileVersion {
-	String version="";
-	String name="";
-	String profileLocation="";
-	String description="";
-	
+	String version = "";
+	String name = "";
+	String profileLocation = "";
+	String description = "";
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public String getProfileLocation() {
 		return profileLocation;
 	}
-	
+
 	public String getVersion() {
 		return version;
 	}
-		
+
 	public String getDescription() {
 		return description;
 	}
-	
-	public static ProfileVersion fromXml(Element element, URI sourceURL) throws MalformedURLException {
+
+	public static ProfileVersion fromXml(Element element, URI sourceURL)
+			throws MalformedURLException {
 		ProfileVersion result = new ProfileVersion();
-		if (element.getChild("version")!=null) result.version=element.getChildTextTrim("version");
-		if (element.getChild("name")!=null) result.name=element.getChildTextTrim("name");
-		if (element.getChild("location")!=null) {
-			result.profileLocation=element.getChildTextTrim("location");					
-			if (sourceURL!=null) {
-				URI correctURL=sourceURL.resolve(result.profileLocation);
-				result.profileLocation=correctURL.toString();
+		if (element.getChild("version") != null)
+			result.version = element.getChildTextTrim("version");
+		if (element.getChild("name") != null)
+			result.name = element.getChildTextTrim("name");
+		if (element.getChild("location") != null) {
+			result.profileLocation = element.getChildTextTrim("location");
+			if (sourceURL != null) {
+				URI correctURL = sourceURL.resolve(result.profileLocation);
+				result.profileLocation = correctURL.toString();
 			}
-		}		
-		if (element.getChild("description")!=null) result.description = element.getChildTextTrim("description");			
-		return result;		
+		}
+		if (element.getChild("description") != null)
+			result.description = element.getChildTextTrim("description");
+		return result;
 	}
 }

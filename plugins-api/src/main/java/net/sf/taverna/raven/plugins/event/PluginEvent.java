@@ -64,17 +64,13 @@ import net.sf.taverna.raven.plugins.Plugin;
  */
 public class PluginEvent extends EventObject {
 	private static final long serialVersionUID = 1L;
+	public static final int NONE = 0;
+	public static final int ENABLED = 1;
+	public static final int DISABLED = 2;
 
 	private Plugin plugin;
-	
 	private int action;
-	
-	public static final int NONE = 0;
-	
-	public static final int ENABLED = 1;
-	
-	public static final int DISABLED = 2;
-	
+
 	/**
 	 * Constructs an instance of PluginEvent.
 	 *
@@ -115,5 +111,4 @@ public class PluginEvent extends EventObject {
 	public int getAction() {
 		return action;
 	}
-
 }

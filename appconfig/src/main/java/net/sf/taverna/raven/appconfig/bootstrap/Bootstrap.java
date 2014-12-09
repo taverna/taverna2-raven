@@ -40,15 +40,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class Bootstrap {
-
 	private static final PreLauncher preLauncher = PreLauncher.getInstance();
-
 	private static Logger logger = Logger.getLogger(Bootstrap.class);
-
 	public static final String VERSION = "1.7.1";
-
 	public static final String APPLICATION = "Taverna-" + VERSION;
-
 	public static Properties properties;
 
 	// Where Raven will store its repository, discovered by main()
@@ -57,7 +52,6 @@ public class Bootstrap {
 //	public static URL[] remoteRepositories;
 
 	private static String loaderVersion;
-
 	private static final String SPLASHSCREEN = "splashscreen-1.7.png";
 //
 //	@Deprecated
@@ -131,7 +125,6 @@ public class Bootstrap {
 			}
 		} catch (Exception e) {
 			logger.error("Could not add system artifacts", e);
-
 		}
 	}
 
@@ -470,6 +463,7 @@ public class Bootstrap {
 		return ApplicationRuntime.getInstance().getLocalRepositoryDir();
 	}
 
+	@SuppressWarnings("unused")
 	private static String getProfileArtifactVersion(String groupId,
 			String artifactId) {
 		String result = null;

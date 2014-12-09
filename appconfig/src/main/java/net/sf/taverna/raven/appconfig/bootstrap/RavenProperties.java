@@ -53,32 +53,30 @@
  *****************************************************************/
 package net.sf.taverna.raven.appconfig.bootstrap;
 
-
 /**
- * Class to handle the raven.properties. Upon construction it first checks for a remote copy, which if found it downloads and stores locally.
- * If it fails to get a remote copy it uses a locally stored copy if present, otherwise as a last resort it uses
- * the copy bundled with the bootstrap jar.
+ * Class to handle the raven.properties. Upon construction it first checks for a
+ * remote copy, which if found it downloads and stores locally. If it fails to
+ * get a remote copy it uses a locally stored copy if present, otherwise as a
+ * last resort it uses the copy bundled with the bootstrap jar.
  * 
  * @author Stuart Owen
- *
+ * 
  */
 
-@SuppressWarnings("serial")
 public class RavenProperties extends AbstractConfiguration {
-	
 	private static RavenProperties instance = null;
-	
+
 	public static RavenProperties getInstance() {
-		if (instance==null) {
-			instance=new RavenProperties();
+		if (instance == null) {
+			instance = new RavenProperties();
 		}
 		return instance;
 	}
-	
+
 	private RavenProperties() {
 		super();
 	}
-	
+
 	@Override
 	protected String getConfigurationFilename() {
 		return "raven.properties";
@@ -90,33 +88,35 @@ public class RavenProperties extends AbstractConfiguration {
 	}
 
 	/**
-	 * Initialises the properties normally, but then processes them through
-	 * the ProfileSelector to setup the correct $raven.profile
+	 * Initialises the properties normally, but then processes them through the
+	 * ProfileSelector to setup the correct $raven.profile
 	 * 
 	 * @see ProfileSelector
 	 */
 	@Override
 	protected void initialiseProperties() {
 		super.initialiseProperties();
-		if (properties!=null) {
+		if (properties != null) {
 			new ProfileSelector(getProperties());
 		}
 	}
-	
+
 	/**
-	 * Indicates whether the system is configured to allow updates (using a profilelist) or not (using a forced profile).
+	 * Indicates whether the system is configured to allow updates (using a
+	 * profilelist) or not (using a forced profile).
+	 * 
 	 * @return
 	 */
 	public boolean configuredForUpdates() {
-		return getRavenProfileListLocation()!=null;
+		return getRavenProfileListLocation() != null;
 	}
-	
+
 	public String getRavenProfileLocation() {
 		return getProperties().getProperty("raven.profile");
 	}
-	
+
 	public String getRavenProfileListLocation() {
 		return getProperties().getProperty("raven.profilelist");
 	}
-	
+
 }

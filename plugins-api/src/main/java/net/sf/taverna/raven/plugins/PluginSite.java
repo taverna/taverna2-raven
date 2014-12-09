@@ -132,6 +132,7 @@ public class PluginSite {
         return uri;
     }
 	
+	@Override
 	public String toString() {
 		return "Plugin site " + getUrl();
 	}
@@ -185,9 +186,6 @@ public class PluginSite {
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

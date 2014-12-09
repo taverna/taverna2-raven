@@ -66,7 +66,6 @@ import java.net.URLClassLoader;
  * @author David Withers
  */
 public class BootstrapClassLoader extends URLClassLoader {
-
 	/**
 	 * Constructs an instance of BootstrapClassloader.
 	 * 
@@ -76,14 +75,8 @@ public class BootstrapClassLoader extends URLClassLoader {
 		super(new URL[0], parent);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.net.URLClassLoader#addURL(java.net.URL)
-	 */
 	@Override
 	public void addURL(URL url) {
 		super.addURL(url);
 	}
-
 }

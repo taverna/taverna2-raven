@@ -30,13 +30,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PreLauncher {
-
 	private static final String LAUNCHER_CLASS = "net.sf.taverna.raven.launcher.Launcher";
 	private static final String LAUNCHER_MAIN = "main";
 	private static final PreLauncher instance = new PreLauncher();
+
 	private BootstrapClassLoader launchingClassLoader;
 
 	public class JarFilenameFilter implements FilenameFilter {
+		@Override
 		public boolean accept(File dir, String name) {
 			return name.toLowerCase().endsWith(".jar");
 		}
@@ -126,7 +127,7 @@ public class PreLauncher {
 	}
 
 	protected List<URL> buildClassPath() throws IOException {
-		List<URL> classPath = new ArrayList<URL>();
+		List<URL> classPath = new ArrayList<>();
 		File libDir = ClassLocation.getClassLocationDir(getClass());
 
 		// The directory itself, when run from .class files
@@ -137,7 +138,6 @@ public class PreLauncher {
 			System.err.println("Can't list files of " + libDir);
 		} else {
 			for (File jarFile : jarFiles) {
-				jarFile.toURL();
 				classPath.add(jarFile.toURI().toURL());
 			}
 		}

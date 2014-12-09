@@ -44,7 +44,7 @@ public class TestClassLocation {
 
 	@Test
 	public void allDiffer() throws Exception {
-		Set<Class<?>> foundClasses = new HashSet<Class<?>>();
+		Set<Class<?>> foundClasses = new HashSet<>();
 		foundClasses.add(loadClassFromURL(jar));
 		foundClasses.add(loadClassFromURL(jarWithSpaces));
 		foundClasses.add(loadClassFromURL(classes));
@@ -53,9 +53,11 @@ public class TestClassLocation {
 
 		try {
 			foundClasses.add(getClass().getClassLoader().loadClass(CLASS_NAME));
-			// If it exists in our classloader as well (ie. when running in
-			// Eclipse), make sure none of the above found that class instead
-			// of the fresh one
+			/*
+			 * If it exists in our classloader as well (i.e. when running in
+			 * Eclipse), make sure none of the above found that class instead of
+			 * the fresh one
+			 */
 			assertEquals(5, foundClasses.size());
 		} catch (ClassNotFoundException ex) {
 			// OK, didn't exist in our class loader
@@ -205,6 +207,7 @@ public class TestClassLocation {
 		assertNotNull(jarWithSpaces);
 	}
 
+	@SuppressWarnings("resource")
 	private Class<?> loadClassFromURL(URL url) throws ClassNotFoundException {
 		return new URLClassLoader(new URL[] { url }, null)
 				.loadClass(CLASS_NAME);

@@ -32,6 +32,7 @@ import java.util.Map.Entry;
  *
  * @author Stuart Owen
  */
+@SuppressWarnings("unused")
 public class Repositories {
 //
 //	public URL [] find() {

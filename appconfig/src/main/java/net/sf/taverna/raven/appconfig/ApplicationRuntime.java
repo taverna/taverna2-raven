@@ -23,6 +23,7 @@ package net.sf.taverna.raven.appconfig;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,33 +37,20 @@ import net.sf.taverna.raven.repository.impl.LocalRepository;
 import org.apache.log4j.Logger;
 
 public class ApplicationRuntime {
-
 	private static final String INFRASTRUCTURE_GROUPID = "net.sf.taverna.t2.infrastructure";
-
 	private static final String SPRING_VERSION = "2.5.4";
-
 	private static final String PLATFORM_VERSION = "0.1";
-
 	private static final String REFERENCE_VERSION = "0.1";
-
 	private static final String INFRASTRUCTURE_VERSION = "1.12";
-
 	private static final String PLUGINS = "plugins";
-
 	private static final String LAUNCHER_SPLASHSCREEN_PNG = "/launcher_splashscreen.png";
-
 	private static final String REPOSITORY = "repository";
-
 	private static Logger logger = Logger.getLogger(ApplicationRuntime.class);
 
 	private ApplicationConfig appConfig = ApplicationConfig.getInstance();
-
 	private File localRepositoryDir;
-
 	private File applicationHomeDir;
-
 	private ApplicationUserHome appUserHome;
-
 	private Repository ravenRepository;
 
 	private static class ApplicationRuntimeHolder {
@@ -74,9 +62,8 @@ public class ApplicationRuntime {
 	 */
 	protected ApplicationRuntime() {
 		String name = appConfig.getName();
-		if (name.equals(ApplicationConfig.UNKNOWN_APPLICATION)) {
+		if (name.equals(ApplicationConfig.UNKNOWN_APPLICATION))
 			name = null;
-		}
 		appUserHome = new ApplicationUserHome(name, appConfig
 				.getApplicationHome());
 	}
@@ -96,9 +83,8 @@ public class ApplicationRuntime {
 	 * @return
 	 */
 	public synchronized File getLocalRepositoryDir() {
-		if (localRepositoryDir != null) {
+		if (localRepositoryDir != null)
 			return localRepositoryDir;
-		}
 
 		// Let's see if the application config says where it should be
 		String appRepository = appConfig.getLocalRavenRepository();
@@ -111,10 +97,9 @@ public class ApplicationRuntime {
 		}
 
 		localRepositoryDir.mkdirs();
-		if (!localRepositoryDir.isDirectory()) {
+		if (!localRepositoryDir.isDirectory())
 			throw new IllegalStateException("Could not make local repository "
 					+ localRepositoryDir);
-		}
 		return localRepositoryDir;
 
 	}
@@ -138,10 +123,9 @@ public class ApplicationRuntime {
 					+ " using temporary dir " + homeDir);
 
 		}
-		if (!homeDir.isDirectory()) {
+		if (!homeDir.isDirectory())
 			throw new IllegalStateException(
 					"Could not create application home directory " + homeDir);
-		}
 		applicationHomeDir = homeDir;
 		return applicationHomeDir;
 	}
@@ -159,17 +143,14 @@ public class ApplicationRuntime {
 	public synchronized void setLocalRepositoryDir(File localRepositoryDir)
 			throws IOException {
 		localRepositoryDir.mkdirs();
-		if (localRepositoryDir.isDirectory()) {
-			this.localRepositoryDir = localRepositoryDir;
-		} else {
+		if (!localRepositoryDir.isDirectory())
 			throw new IOException("Invalid directory " + localRepositoryDir);
-		}
+		this.localRepositoryDir = localRepositoryDir;
 	}
 
 	public synchronized Repository getRavenRepository() {
-		if (ravenRepository != null) {
+		if (ravenRepository != null)
 			return ravenRepository;
-		}
 		ravenRepository = makeRavenRepository();
 		ravenRepository.update();
 		return ravenRepository;
@@ -187,9 +168,12 @@ public class ApplicationRuntime {
 				getClassLoader(), getSystemArtifacts());
 		
 		URL defaultRepository = getDefaultRepositoryDir();
-		if (defaultRepository != null) {
-			repository.addRemoteRepository(defaultRepository);
-		}		
+		try {
+			if (defaultRepository != null)
+				repository.addRemoteRepository(defaultRepository.toURI());
+		} catch (URISyntaxException e) {
+			logger.error("failed to add remote repository", e);
+		}
 		return repository;
 	}
 
@@ -274,57 +258,42 @@ public class ApplicationRuntime {
 	public File getPluginsDir() {
 		File pluginsDir = new File(getApplicationHomeDir(), PLUGINS);
 		pluginsDir.mkdirs();
-		if (!pluginsDir.isDirectory()) {
+		if (!pluginsDir.isDirectory())
 			throw new IllegalStateException(
 					"Could not create plugins directory " + pluginsDir);
-		}
 		return pluginsDir;
 	}
 
 	public URL getDefaultPluginsDir() {
-		URL startupDir;
 		try {
-			startupDir = appConfig.getStartupRoot();
+			URL startupDir = appConfig.getStartupRoot();
+			return new URL(startupDir, PLUGINS + "/");
+		} catch (MalformedURLException e) {
+			logger.error("failed to get plugin metadata location", e);
+			return null;
 		} catch (IOException e) {
 			logger.warn("Could not find startup directory", e);
 			return null;
 		}
-		URL pluginsURI;
-		try {
-			pluginsURI = new URL(startupDir, PLUGINS+"/");
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
-		return pluginsURI;
 	}
 
 	public URL getDefaultRepositoryDir() {
-		URL startupDir;
 		try {
-			startupDir = appConfig.getStartupRoot();
+			URL startupDir = appConfig.getStartupRoot();
+			return new URL(startupDir, REPOSITORY + "/");
+		} catch (MalformedURLException e) {
+			logger.error("failed to get repository location", e);
+			return null;
 		} catch (IOException e) {
 			logger.warn("Could not find startup directory", e);
 			return null;
 		}
-		URL repositoryURI;
-		try {
-			repositoryURI = new URL(startupDir, REPOSITORY+"/");
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
-		return repositoryURI;
 		
 	}
 
 	public URL getSplashScreenURL() {
-		if (!appConfig.isShowingSplashscreen()) {
+		if (!appConfig.isShowingSplashscreen())
 			return null;
-		}
 		return getClass().getResource(LAUNCHER_SPLASHSCREEN_PNG);
 	}
-
 }

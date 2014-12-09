@@ -65,66 +65,64 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
- * Extension to PluginSite specifally for the main Taverna plugin site.
- * This will not get entered into the plugins/plugin-sites.xml, and also supports a
+ * Extension to PluginSite specifally for the main Taverna plugin site. This
+ * will not get entered into the plugins/plugin-sites.xml, and also supports a
  * list of alternative url's for fail-over should the mygrid site fail.
  * 
  * @author Stuart Owen
- *
  */
-
 public class TavernaPluginSite extends PluginSite {
-	
 	private static Logger logger = Logger.getLogger(TavernaPluginSite.class);
+
 	private URL workingURL = null;
-	
-	private List<URI> urls = new ArrayList<URI>();
-	
+	private List<URI> urls = new ArrayList<>();
+
 	public TavernaPluginSite(String name, List<URI> uris) {
-	    super(name, uris.get(0));
-	    this.urls.addAll(uris);
+		super(name, uris.get(0));
+		this.urls.addAll(uris);
 	}
-	
+
 	@Deprecated
-	@SuppressWarnings("deprecation")
-    public TavernaPluginSite(String name, URL [] urls) {
-		super(name,urls[0]);
+	public TavernaPluginSite(String name, URL[] urls) {
+		super(name, urls[0]);
 		for (URL url : urls)
-            try {
-                this.urls.add(url.toURI());
-            } catch (URISyntaxException e) {
-               logger.warn("Skipping invalid plugin site " + url);
-            }
+			try {
+				this.urls.add(url.toURI());
+			} catch (URISyntaxException e) {
+				logger.warn("Skipping invalid plugin site " + url);
+			}
 	}
 
 	/**
-	 * checks each url until it returns a working one, or the null if they all fail.
-	 * If a working url is found then this url is stored an returned for subsequent calls.
-	 */	
-	public URL getUrl() {		
-		if (workingURL!=null) {
+	 * checks each url until it returns a working one, or the null if they all
+	 * fail. If a working url is found then this url is stored an returned for
+	 * subsequent calls.
+	 */
+	@Override
+	public URL getUrl() {
+		if (workingURL != null) {
 			if (logger.isDebugEnabled())
-				logger.debug("Using known working URL:"+workingURL +" from list: "+urls);
+				logger.debug("Using known working URL:" + workingURL
+						+ " from list: " + urls);
 			return workingURL;
 		}
-		URL pluginsURL=null;
+		URL pluginsURL = null;
 		for (URI uri : urls) {
 			try {
-			    URL url = uri.toURL();
-				pluginsURL=new URL(url,"pluginlist.xml");
-				URLConnection con=pluginsURL.openConnection();
-				InputStream stream=con.getInputStream();
+				URL url = uri.toURL();
+				pluginsURL = new URL(url, "pluginlist.xml");
+				URLConnection con = pluginsURL.openConnection();
+				InputStream stream = con.getInputStream();
 				stream.close();
-				workingURL=url;
+				workingURL = url;
 				return url;
-			}
-			catch(IOException e) {
-				logger.warn("Unable opening stream to "+pluginsURL+", will use next mirror");
+			} catch (IOException e) {
+				logger.warn("Unable opening stream to " + pluginsURL
+						+ ", will use next mirror");
 			}
 		}
-		logger.warn("Unable to connect to Taverna plugin site. None of the candidate URLs worked:"+urls);
+		logger.warn("Unable to connect to Taverna plugin site. None of the candidate URLs worked:"
+				+ urls);
 		return null;
 	}
-	
-	
 }

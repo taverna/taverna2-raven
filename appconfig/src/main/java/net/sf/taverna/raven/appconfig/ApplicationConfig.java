@@ -53,7 +53,6 @@ import net.sf.taverna.raven.prelauncher.ClassLocation;
  * 
  */
 public class ApplicationConfig {
-
 	private static final String CONF = "conf/";
 	public static final String UNKNOWN_APPLICATION = "unknownApplication-"
 			+ UUID.randomUUID().toString();
@@ -88,10 +87,9 @@ public class ApplicationConfig {
 
 	public String getMainClass() {
 		String name = (String) getProperties().get(APP_MAIN);
-		if (name == null) {
+		if (name == null)
 			throw new IllegalStateException(
 					"Can't find application main method");
-		}
 		return name;
 	}
 
@@ -114,9 +112,8 @@ public class ApplicationConfig {
 			for (Entry<Object, Object> property : System.getProperties()
 					.entrySet()) {
 				String key = (String) property.getKey();
-				if (key.startsWith(PREFIX)) {
+				if (key.startsWith(PREFIX))
 					properties.put(key, property.getValue());
-				}
 			}
 		}
 		return properties;
@@ -207,7 +204,7 @@ public class ApplicationConfig {
 	protected Properties loadProperties(String resourceName) {
 		// Ordered list of config locations to attempt to load
 		// properties from
-		List<URI> configs = new ArrayList<URI>();
+		List<URI> configs = new ArrayList<>();
 
 		try {
 			File startupDir = getStartupDir();
@@ -283,8 +280,10 @@ public class ApplicationConfig {
 	}
 
 	public boolean isUsingRaven() {
-		// Note - the default is "false" if the property has not been set
-		// or has been set to an invalid value
+		/*
+		 * Note - the default is "false" if the property has not been set or has
+		 * been set to an invalid value
+		 */
 		return Boolean.parseBoolean(getProperties()
 				.getProperty(APP_USING_RAVEN));
 	}

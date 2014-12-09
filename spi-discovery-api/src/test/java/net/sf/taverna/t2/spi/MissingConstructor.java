@@ -35,6 +35,7 @@ public class MissingConstructor implements DummySPI {
 		fail("MissingConstructor should not have been constructed");
 	}
 	
+	@Override
 	public String getName() {
 		fail("MissingConstructor should not have been constructed");
 		return "MissingConstructor";

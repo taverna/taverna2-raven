@@ -54,13 +54,11 @@ public class Log4JConfiguration extends AbstractConfiguration {
 	}
 	
 	public void prepareLog4J() {
-		if (log4jConfigured) {
+		if (log4jConfigured)
 			return;
-		}
 		LogManager.resetConfiguration();
-		//BasicConfigurator.configure();
-		
-		
+		// BasicConfigurator.configure();
+
 		Properties log4jProperties = getProperties();
 		if (log4jProperties != null && ! log4jProperties.isEmpty()) {
 			LogManager.resetConfiguration();
@@ -85,36 +83,32 @@ public class Log4JConfiguration extends AbstractConfiguration {
 		} catch (IOException e) {
 			System.err.println("Could not log to " + logFilePath);
 		}
-		
-		
-		
-		if (! (Log.getImplementation() instanceof Log4jLog)) {
+
+		if (!(Log.getImplementation() instanceof Log4jLog)) {
 			Log.setImplementation(new Log4jLog());
 		}
 		log4jConfigured = true;
 		// FIXME: Why is this here?
 		// Profile profile = ProfileFactory.getInstance().getProfile();
-		
 	}
 
 	public File getLogFile() {
-		return new File(getLogDir(), ApplicationConfig.getInstance().getName() + ".log");
+		return new File(getLogDir(), ApplicationConfig.getInstance().getName()
+				+ ".log");
 	}
 
 	public File getLogDir() {
-		File logDir = new File(ApplicationRuntime.getInstance().getApplicationHomeDir(), "logs");
+		File logDir = new File(ApplicationRuntime.getInstance()
+				.getApplicationHomeDir(), "logs");
 		logDir.mkdirs();
-		if (!logDir.isDirectory()) {
-			throw new IllegalStateException(
-					"Could not create log directory " + logDir);
-		}
+		if (!logDir.isDirectory())
+			throw new IllegalStateException("Could not create log directory "
+					+ logDir);
 		return logDir;
 	}
-	
 
 	@Override
 	protected String getConfigurationFilename() {
 		return LOG4J_PROPERTIES;
 	}
-
 }

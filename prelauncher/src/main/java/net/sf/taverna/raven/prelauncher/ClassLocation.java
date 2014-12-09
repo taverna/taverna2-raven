@@ -36,10 +36,9 @@ import java.util.WeakHashMap;
  * 
  */
 public class ClassLocation {
-
-	private static WeakHashMap<Class<?>, File> classLocationFiles = new WeakHashMap<Class<?>, File>();
-	private static WeakHashMap<Class<?>, File> classLocationDirs = new WeakHashMap<Class<?>, File>();
-	private static WeakHashMap<Class<?>, URI> classLocationURIs = new WeakHashMap<Class<?>, URI>();
+	private static WeakHashMap<Class<?>, File> classLocationFiles = new WeakHashMap<>();
+	private static WeakHashMap<Class<?>, File> classLocationDirs = new WeakHashMap<>();
+	private static WeakHashMap<Class<?>, URI> classLocationURIs = new WeakHashMap<>();
 
 	/**
 	 * Get the canonical directory of the class file or jar file that the given
@@ -57,13 +56,11 @@ public class ClassLocation {
 	 */
 	public static File getClassLocationDir(Class<?> theClass)
 			throws IOException {
-		if (classLocationDirs.containsKey(theClass)) {
+		if (classLocationDirs.containsKey(theClass))
 			return classLocationDirs.get(theClass);
-		}
 		File file = getClassLocationFile(theClass);
-		if (!file.isDirectory()) {
+		if (!file.isDirectory())
 			file = file.getParentFile();
-		}
 		classLocationDirs.put(theClass, file);
 		return file;
 	}
@@ -83,22 +80,24 @@ public class ClassLocation {
 	 */
 	public static File getClassLocationFile(Class<?> theClass)
 			throws IOException {
-		if (classLocationFiles.containsKey(theClass)) {
+		if (classLocationFiles.containsKey(theClass))
 			return classLocationFiles.get(theClass);
-		}
 
 		URI fileURI = getClassLocationURI(theClass);
-		// Now that we have a URL, make sure that it is a "file" URL
-		// as we need to coerce the URL into a File object
-		if (!fileURI.getScheme().equals("file")) {
+		/*
+		 * Now that we have a URL, make sure that it is a "file" URL as we need
+		 * to coerce the URL into a File object
+		 */
+		if (!fileURI.getScheme().equals("file"))
 			throw new IOException("Class " + theClass
 					+ " was not loaded from a file, but from " + fileURI);
-		}
-		// Coerce the URL into a File and check that it exists. Note that
-		// the JVM <code>File(String)</code> constructor automatically
-		// flips all '/' characters to '\' on Windows and there are no
-		// valid escape characters so we would not have to worry about
-		// URL encoded slashes.
+
+		/*
+		 * Coerce the URL into a File and check that it exists. Note that the
+		 * JVM <code>File(String)</code> constructor automatically flips all '/'
+		 * characters to '\' on Windows and there are no valid escape characters
+		 * so we would not have to worry about URL encoded slashes.
+		 */
 		File file = new File(fileURI);
 		if (!file.exists() || !file.canRead())
 			throw new IOException("File/directory " + file + " where "
@@ -122,9 +121,8 @@ public class ClassLocation {
 	 *             the class was not loaded from a file:/// URI.
 	 */
 	public static URI getClassLocationURI(Class<?> theClass) throws IOException {
-		if (classLocationURIs.containsKey(theClass)) {
+		if (classLocationURIs.containsKey(theClass))
 			return classLocationURIs.get(theClass);
-		}
 
 		// Get a URL for where this class was loaded from
 		String classResourceName = theClass.getName().replace('.', '/')
@@ -135,10 +133,12 @@ public class ClassLocation {
 		String resourcePath = null;
 		String embeddedClassName = null;
 		String protocol = resource.getProtocol();
-		boolean isJar = (protocol != null) && (protocol.equals("jar"));
+		boolean isJar = (protocol != null) && protocol.equals("jar");
 		if (isJar) {
-			// Note: DON'T decode as the part-URL is not double-encoded
-			// and otherwise %20 -> " " -> new URI() would fail
+			/*
+			 * Note: DON'T decode as the part-URL is not double-encoded and
+			 * otherwise %20 -> " " -> new URI() would fail
+			 */
 			resourcePath = resource.getFile();
 			embeddedClassName = "!/" + classResourceName;
 		} else {
@@ -146,17 +146,15 @@ public class ClassLocation {
 			embeddedClassName = classResourceName;
 		}
 		int sep = resourcePath.lastIndexOf(embeddedClassName);
-		if (sep >= 0) {
+		if (sep >= 0)
 			resourcePath = resourcePath.substring(0, sep);
-		}
 
-		URI sourceURI;
 		try {
-			sourceURI = new URI(resourcePath).normalize();
+			URI sourceURI = new URI(resourcePath).normalize();
+			classLocationURIs.put(theClass, sourceURI);
+			return sourceURI;
 		} catch (URISyntaxException e) {
 			throw new IOException("Invalid URI: " + resourcePath);
 		}
-		classLocationURIs.put(theClass, sourceURI);
-		return sourceURI;
 	}
 }

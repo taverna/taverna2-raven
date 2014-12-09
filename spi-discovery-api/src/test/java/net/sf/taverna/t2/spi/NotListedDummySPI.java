@@ -31,6 +31,7 @@ import static junit.framework.Assert.fail;
  * 
  */
 public class NotListedDummySPI implements DummySPI {
+	@Override
 	public String getName() {
 		fail("NotListedDummySPI should not have been included");
 		return "NotListedDummySPI";

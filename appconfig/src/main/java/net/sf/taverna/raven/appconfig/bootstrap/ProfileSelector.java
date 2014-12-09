@@ -26,30 +26,40 @@ import java.net.URL;
 import java.util.Properties;
 
 /**
- * Handles the selection of a profile, determined by the properties $raven.profile and $raven.profilelist.
- * The profile that gets used is determined by the following rules
- * 
- * $raven.profilelist - Is only used if $raven.profile is not defined. 
- * 						Contains a list of available profiles. 
- * 						On first run, Taverna will use the lowest version profile (or should it start with the latest version?) in the list and makes a local copy to $taverna.home/conf/current-profile-1.5.2.xml. 
- * 						On subsequent runs will always use the local copy. If a higher version becomes available in the list then an option to update becomes available, and if selected updates the local copy. Likewise, switching to a lower version updates the local copy. 
- * 						This is the standard configuration for Taverna releases.
- *
- * $raven.profile - if set overrides $raven.profilelist (and removes the property if it exists). and forces this profile to be used (i.e. no update request required from user). 
- * 					No local copy gets stored or read. 
- * 					This defaults to $taverna.startup/conf/profile.xml if the file exists and $raven.profile is not already defined. (so in effect $raven.profilelist is ignored if this file is present). 
- * 					This is useful for training courses, snapshot releases and custom installs.
- * 
- * Ultimately the property $raven.profile will hold the actual profile to be used
+ * Handles the selection of a profile, determined by the properties
+ * $raven.profile and $raven.profilelist. The profile that gets used is
+ * determined by the following rules
+ * <dl>
+ * <dt>$raven.profilelist</dt>
+ * <dd>Is only used if $raven.profile is not defined. Contains a list of
+ * available profiles. On first run, Taverna will use the lowest version profile
+ * (or should it start with the latest version?) in the list and makes a local
+ * copy to $taverna.home/conf/current-profile-1.5.2.xml. On subsequent runs will
+ * always use the local copy. If a higher version becomes available in the list
+ * then an option to update becomes available, and if selected updates the local
+ * copy. Likewise, switching to a lower version updates the local copy. This is
+ * the standard configuration for Taverna releases.</dd>
+ * <dt>$raven.profile</dt>
+ * <dd>if set overrides $raven.profilelist (and removes the property if it
+ * exists). and forces this profile to be used (i.e. no update request required
+ * from user). No local copy gets stored or read. This defaults to
+ * $taverna.startup/conf/profile.xml if the file exists and $raven.profile is
+ * not already defined. (so in effect $raven.profilelist is ignored if this file
+ * is present). This is useful for training courses, snapshot releases and
+ * custom installs.</dd>
+ * </dl>
+ * Ultimately the property $raven.profile will hold the actual profile to be
+ * used
  * 
  * @author Stuart Owen
- *
+ * 
  */
 public class ProfileSelector {
-	
+	public static final String CURRENT_PROFILE = "current-profile-"
+			+ Bootstrap.VERSION + ".xml";
+	private final String DEFAULT_RAVEN_PROFILE = "profile.xml";
+
 	private Properties properties;
-	public static final String CURRENT_PROFILE="current-profile-"+Bootstrap.VERSION+".xml";
-	private final String DEFAULT_RAVEN_PROFILE="profile.xml";
 	
 	public ProfileSelector(Properties properties) {
 		this.properties=properties;
@@ -57,7 +67,11 @@ public class ProfileSelector {
 		String ravenProfile = properties.getProperty("raven.profile");
 		String ravenProfileList = properties.getProperty("raven.profilelist");
 		
-		//if the profile or profilelist is defined as a space seperated list, then use the first URL that can be opened, and update the property to use this.
+		/*
+		 * if the profile or profilelist is defined as a space seperated list,
+		 * then use the first URL that can be opened, and update the property to
+		 * use this.
+		 */
 		if (ravenProfile!=null && ravenProfile.contains(" ")) {
 			ravenProfile=selectURLFromList(ravenProfile);
 			properties.setProperty("raven.profile", ravenProfile);
@@ -82,69 +96,57 @@ public class ProfileSelector {
 				result = urlStr;
 				found = true;
 				break;
-			}
-			catch(Exception e) {
-				System.out.println("There is a problem connecting to the url:"+urlStr);
+			} catch (Exception e) {
+				System.out.println("There is a problem connecting to the url:"
+						+ urlStr);
 			}
 		}
 		if (!found) {
-			System.out.println("Unable to connect to any of the mirror sites for to check for updated profiles.");
+			System.out.println("Unable to connect to any of the mirror sites "
+					+ "for to check for updated profiles.");
 			System.out.println("THIS STRONGLY INDICATES YOU HAVE NO NETWORK ACCESS.");
 		}
 		
 		return result;
 	}
-	
+
 	private void resolve(String ravenProfile, String ravenProfileList) {
-		if (ravenProfile==null) {
-			if (!checkForProfileInStartUp()) {
-				if (ravenProfileList!=null) {
-					determineStartProfile(ravenProfileList);
-				}
-				else {
-					selectCurrentIfAvailable();
-				}
-			}
-			else {
-				properties.remove("raven.profilelist");
-			}
-		}
-		else {
+		if (ravenProfile != null || checkForProfileInStartUp())
 			properties.remove("raven.profilelist");
-		}
+		else if (ravenProfileList != null)
+			determineStartProfile(ravenProfileList);
+		else
+			selectCurrentIfAvailable();
 	}
 	
 	private boolean checkForProfileInStartUp() {
-		boolean result = false;
 		File defaultProfile = getDefaultProfileFile();
-		if (defaultProfile!=null && defaultProfile.exists()) {
-			String url = defaultProfile.toURI().toString();
-			properties.setProperty("raven.profile", url);
-			result=true;
+		if (defaultProfile != null && defaultProfile.exists()) {
+			properties.setProperty("raven.profile", defaultProfile.toURI()
+					.toString());
+			return true;
 		}
-		return result;
+		return false;
 	}
 	
 	private void determineStartProfile(String ravenProfileList) {
-		if (ravenProfileList!=null) {
-			if (!selectCurrentIfAvailable()) {
-				try {
-					File currentProfileFile = getCurrentProfileFile();
-					if (currentProfileFile!=null) {
-						URL listURL = new URL(ravenProfileList);
-						ProfileListSelector listSelector = new ProfileListSelector(listURL);
-						listSelector.storeFirst(currentProfileFile);
-						
-						//it should be available now
-						if (!selectCurrentIfAvailable()) {
-							System.out.println("Not able to determine current profile");
-						}
-					}
-				}
-				catch(Exception e) {
-					e.printStackTrace();
+		try {
+			if (ravenProfileList != null && !selectCurrentIfAvailable()) {
+				File currentProfileFile = getCurrentProfileFile();
+				if (currentProfileFile != null) {
+					URL listURL = new URL(ravenProfileList);
+					ProfileListSelector listSelector = new ProfileListSelector(
+							listURL);
+					listSelector.storeFirst(currentProfileFile);
+
+					// it should be available now
+					if (!selectCurrentIfAvailable())
+						System.out
+								.println("Not able to determine current profile");
 				}
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -157,30 +159,28 @@ public class ProfileSelector {
 	}
 	
 	private boolean selectCurrentIfAvailable() {
-		boolean result=false;
 		File current = getCurrentProfileFile();
-		if (current!=null && current.exists()) {
-			String url = current.toURI().toString();
-			properties.setProperty("raven.profile", url);
-			result = true;
+		if (current != null && current.exists()) {
+			properties.setProperty("raven.profile", current.toURI().toString());
+			return true;
 		}
-		return result;
+		return false;
 	}
 	
 	private File getDefaultProfileFile() {
 		File result = null;
-		if (getTavernaStartup()!=null) {
-			result = new File(getTavernaStartup(),"conf");
-			result = new File(result,DEFAULT_RAVEN_PROFILE);
+		if (getTavernaStartup() != null) {
+			result = new File(getTavernaStartup(), "conf");
+			result = new File(result, DEFAULT_RAVEN_PROFILE);
 		}
 		return result;
 	}
 	
 	private File getCurrentProfileFile() {
 		File result = null;
-		if (getTavernaHome()!=null) {
-			result = new File(getTavernaHome(),"conf");
-			result = new File(result,CURRENT_PROFILE);
+		if (getTavernaHome() != null) {
+			result = new File(getTavernaHome(), "conf");
+			result = new File(result, CURRENT_PROFILE);
 		}
 		return result;
 	}
@@ -188,5 +188,4 @@ public class ProfileSelector {
 	public String getProfileLocation() {
 		return properties.getProperty("raven.profile");
 	}
-	
 }

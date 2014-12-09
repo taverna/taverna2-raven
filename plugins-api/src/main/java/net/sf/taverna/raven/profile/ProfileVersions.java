@@ -88,33 +88,38 @@ public class ProfileVersions {
 	private static Logger logger = Logger.getLogger(ProfileVersions.class);	
 	
 	public static List<ProfileVersion> getProfileVersions(URL profileListUrl) {
-		try {						
-			InputStream str=profileListUrl.openStream();
-			return getProfileVersions(str,profileListUrl.toURI());
+		try (InputStream str = profileListUrl.openStream();) {
+			return getProfileVersions(str, profileListUrl.toURI());
+		} catch (Exception e) {
+			logger.error("Error opening the stream to the URL:"
+					+ profileListUrl, e);
 		}
-		catch(Exception e) {
-			logger.error("Error opening the stream to the URL:"+profileListUrl.toString(),e);
-		}
-		return new ArrayList<ProfileVersion>();
+		return new ArrayList<>();
 	}
 	
 	/**
-	 * Provides a list of available profiles read from a stream, provided by an external xml source (usually http hosted).
-	 * If the sourceURL is not null then this can be used to resolve the partial URL's of profile locations based on the assumption that they are hosted
-	 * at the same place.  
+	 * Provides a list of available profiles read from a stream, provided by an
+	 * external xml source (usually http hosted). If the sourceURL is not null
+	 * then this can be used to resolve the partial URL's of profile locations
+	 * based on the assumption that they are hosted at the same place.
 	 * 
 	 * The list is ordered according to the version number, ascending
 	 * 
-	 * @param profileListStream the stream to the profile versions XML document
-	 * @param sourceURL if not null, then this URL is used to resolve partial URL's within the profile version XML document to their full path
+	 * @param profileListStream
+	 *            the stream to the profile versions XML document
+	 * @param sourceURL
+	 *            if not null, then this URL is used to resolve partial URL's
+	 *            within the profile version XML document to their full path
 	 * @return
 	 */
-	public static List<ProfileVersion> getProfileVersions(InputStream profileListStream, URI sourceURL) {
-		List<ProfileVersion> result = new ArrayList<ProfileVersion>();				
+	public static List<ProfileVersion> getProfileVersions(
+			InputStream profileListStream, URI sourceURL) {
+		List<ProfileVersion> result = new ArrayList<>();				
 		
 		try {			
 			SAXBuilder builder = new SAXBuilder();
-			Document doc=builder.build(profileListStream);
+			Document doc = builder.build(profileListStream);
+			@SuppressWarnings("unchecked")
 			List<Element> profiles = doc.getRootElement().getChildren("profile");
 			for (Element profileElement : profiles) {
 				try {
@@ -124,10 +129,11 @@ public class ProfileVersions {
 					logger.error("An error occurred processing the URL of the profile definition",e);
 				}
 			}
-			
-		}
-		catch(Exception e) {
-			logger.error("Error reading xml for the list of available profile versions from "+profileListStream.toString(),e);
+
+		} catch (Exception e) {
+			logger.error(
+					"Error reading xml for the list of available profile versions from "
+							+ profileListStream, e);
 		}
 		
 		sortList(result);
@@ -137,6 +143,7 @@ public class ProfileVersions {
 	
 	private static void sortList(List<ProfileVersion> list) {
 		Collections.sort(list,new Comparator<ProfileVersion>() {
+			@Override
 			public int compare(ProfileVersion v1, ProfileVersion v2) {
 				return v1.version.compareTo(v2.version);
 			}

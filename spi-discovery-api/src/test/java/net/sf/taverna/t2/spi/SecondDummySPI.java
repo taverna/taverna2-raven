@@ -37,6 +37,7 @@ public class SecondDummySPI implements DummySPI {
 		name = getClass().getSimpleName();
 	}
 
+	@Override
 	public String getName() {
 		assertNotNull("Constructor was not called", name);
 		return name;

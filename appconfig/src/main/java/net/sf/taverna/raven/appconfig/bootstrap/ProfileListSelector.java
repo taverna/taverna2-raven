@@ -33,37 +33,36 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * When provided with a URL to the XML that defines a Profile list, the XML is parsed to produce a list of Profile Definitions.
- * 
- * Its possible to store the first profile in the list to a local File, which is used when Taverna is first run and no local profile is defined.
+ * When provided with a URL to the XML that defines a Profile list, the XML is
+ * parsed to produce a list of Profile Definitions.
+ * <p>
+ * Its possible to store the first profile in the list to a local File, which is
+ * used when Taverna is first run and no local profile is defined.
  * 
  * @author Stuart Owen
- *
+ * 
  */
 public class ProfileListSelector {
-	
-	private List<ProfileDef> profiles = new ArrayList<ProfileDef>();
+	private List<ProfileDef> profiles = new ArrayList<>();
 	private URL listUrl;
 	
 	public ProfileListSelector(URL listURL) throws Exception {	
-		this.listUrl=listURL;
+		this.listUrl = listURL;
 		processList(listURL);
 	}
 	
 	private void processList(URL listURL) throws Exception {
-		InputStream inputStream = listURL.openStream();
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
-		Document document = builder.parse(inputStream);
-		inputStream.close();
-		NodeList list = document.getElementsByTagName("profile");
-		for (int i=0;i<list.getLength();i++) {
-			processNode(listURL,list.item(i));
+		try (InputStream inputStream = listURL.openStream()) {
+			NodeList list = builder.parse(inputStream).getElementsByTagName(
+					"profile");
+			for (int i = 0; i < list.getLength(); i++)
+				processNode(listURL, list.item(i));
 		}
 	}
 	
@@ -77,31 +76,24 @@ public class ProfileListSelector {
 	
 	private void processNode(URL listURL,Node profileNode) {
 		ProfileDef def = new ProfileDef();
-		def.version=getChildNodeValue(profileNode,"version");
-		def.location=getChildNodeValue(profileNode,"location");
+		def.version = getChildNodeValue(profileNode, "version");
+		def.location = getChildNodeValue(profileNode, "location");
 		try {
-			def.location=new URL(listURL,def.location).toExternalForm();
+			def.location = new URL(listURL, def.location).toExternalForm();
 			profiles.add(def);
-		}
-		catch(MalformedURLException e) {
+		} catch (MalformedURLException e) {
 			e.printStackTrace();
 			System.out.println("Theres an error with the profile url:"+def.location);
 		}
 	}
 	
 	private String getChildNodeValue(Node node, String elementName) {
-		String result = null;
-		Node child = node.getFirstChild();
-		while (child!=null) {
-			if (child.getNodeType()==Node.ELEMENT_NODE) {
-				if (child.getNodeName().equals(elementName)) {
-					result=child.getFirstChild().getNodeValue();
-					break;
-				}
-			}
-			child=child.getNextSibling();
-		}
-		return result;
+		for (Node child = node.getFirstChild(); child != null; child = child
+				.getNextSibling())
+			if (child.getNodeType() == Node.ELEMENT_NODE
+					&& child.getNodeName().equals(elementName))
+				return child.getFirstChild().getNodeValue();
+		return null;
 	}
 	
 	/**
@@ -109,35 +101,28 @@ public class ProfileListSelector {
 	 * @param destinationFile
 	 */
 	public void storeFirst(File destinationFile) throws Exception {
-		if (profiles.size()>0) {
-			store(destinationFile,profiles.get(0));
-		}
-		else {
-			throw new Exception("No profiles found in list:"+listUrl.toExternalForm());
-		}
+		if (profiles.isEmpty())
+			throw new Exception("No profiles found in list:" + listUrl);
+		store(destinationFile, profiles.get(0));
 	}
-	
-	private void store(File destinationFile, ProfileDef profile) throws IOException {
+
+	private void store(File destinationFile, ProfileDef profile)
+			throws IOException {
 		URL profileURL = new URL(profile.location);
-		InputStream in = profileURL.openStream();
-		
-		if (!destinationFile.exists()) destinationFile.createNewFile();
-		OutputStream out = new FileOutputStream(destinationFile);
-		
-		byte [] buffer = new byte[255];
+		byte[] buffer = new byte[1024];
 		int len;
-		while ((len = in.read(buffer))!=-1) {
-			out.write(buffer,0,len);
+		try (InputStream in = profileURL.openStream()) {
+			if (!destinationFile.exists())
+				destinationFile.createNewFile();
+			try (OutputStream out = new FileOutputStream(destinationFile)) {
+				while ((len = in.read(buffer)) != -1) 
+					out.write(buffer, 0, len);
+			}
 		}
-		
-		in.close();
-		out.close();
-		
 	}
-	
+
 	class ProfileDef {
 		String location;
 		String version;
 	}
-	
 }

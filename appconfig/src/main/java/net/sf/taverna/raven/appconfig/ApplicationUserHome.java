@@ -38,11 +38,8 @@ import org.apache.log4j.Logger;
  * 
  */
 public class ApplicationUserHome {
-
 	private final String defaultApplicationHome;
-
 	private final String applicationName;
-
 	private File homeDir;
 
 	private static Logger logger = Logger.getLogger(ApplicationUserHome.class);

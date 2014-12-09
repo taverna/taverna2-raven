@@ -49,13 +49,18 @@ import org.apache.log4j.Logger;
  * @see net.sf.taverna.raven.appconfig.bootstrap.Bootstrap
  * @author Stian Soiland-Reyes
  */
+@SuppressWarnings("rawtypes")
 public class Log4jLog implements LogInterface {
-	// Mapping between LogInterface.Priority and Log4Js Levels, such as "Debug"
-	// and "Warn"
-	private static Map<Priority, Level> priorityMap = new HashMap<Priority, Level>();
+	/**
+	 * Mapping between LogInterface.Priority and Log4Js Levels, such as "Debug"
+	 * and "Warn"
+	 */
+	private static final Map<Priority, Level> priorityMap = new HashMap<>();
 	static {
-		// We are lucky, the LogInterface.Priority has been designed to match
-		// the log4j priorities
+		/*
+		 * We are lucky, the LogInterface.Priority has been designed to match
+		 * the log4j priorities
+		 */
 		for (Priority p : Priority.values()) {
 			priorityMap.put(p, Level.toLevel(p.name()));
 		}
@@ -66,20 +71,19 @@ public class Log4jLog implements LogInterface {
 		this(Log4jLog.class);
 	}
 
-	@SuppressWarnings("unchecked")
 	public Log4jLog(Class c) {
-		if (Logger.class.getClassLoader() instanceof LocalArtifactClassLoader) {
+		if (Logger.class.getClassLoader() instanceof LocalArtifactClassLoader)
 			throw new IllegalStateException(
 					"log4j cannot be used as a Raven logger when loaded through Raven");
-		}
 		log4j = Logger.getLogger(c);
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public Log4jLog getLogger(Class c) {
 		return new Log4jLog(c);
 	}
 
+	@Override
 	public void log(LogInterface.Priority p, Object msg, Throwable ex) {
 		// FIXME: Will log wrong line number, as it will log the line below
 		log4j.log(priorityMap.get(p), msg, ex);

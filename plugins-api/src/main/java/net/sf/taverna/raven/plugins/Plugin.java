@@ -46,37 +46,25 @@ import org.jdom.Element;
  * @author David Withers
  */
 public class Plugin implements Comparable<Plugin> {
-
 	private static Logger logger = Logger.getLogger(Plugin.class);
 
-	private List<PluginListener> pluginListeners = new ArrayList<PluginListener>();
-
+	private List<PluginListener> pluginListeners = new ArrayList<>();
 	private String name;
-
 	private String description;
-
 	private String identifier;
-
 	private String version;
-
 	private String provider;
-
-	private Set<PluginId> pluginDependencies = new HashSet<PluginId>();
+	private Set<PluginId> pluginDependencies = new HashSet<>();
 	
 	public Set<PluginId> getPluginDependencies() {
 		return pluginDependencies;
 	}
 
-	private List<String> versions = new ArrayList<String>();
-
+	private List<String> versions = new ArrayList<>();
 	private boolean enabled;
-
-	private List<String> repositories = new ArrayList<String>();
-
+	private List<String> repositories = new ArrayList<>();
 	private Profile profile = new Profile(true);
-
 	private boolean builtIn = false;
-
 	public boolean compatible = true;
 
 	/**
@@ -371,6 +359,7 @@ public class Plugin implements Comparable<Plugin> {
 	 *            the XML element
 	 * @return a new <code>Plugin</code>
 	 */
+	@SuppressWarnings("unchecked")
 	@Deprecated
 	public static Plugin fromXml(Element pluginElement) {
 		Plugin plugin = new Plugin();
@@ -506,11 +495,6 @@ public class Plugin implements Comparable<Plugin> {
 		return pluginElement;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		final int PRIME = 31;
@@ -520,11 +504,6 @@ public class Plugin implements Comparable<Plugin> {
 		return result;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -542,6 +521,7 @@ public class Plugin implements Comparable<Plugin> {
 		return true;
 	}
 
+	@Override
 	public int compareTo(Plugin o) {
 		if (this == o) {
 			return 0;
@@ -565,7 +545,6 @@ public class Plugin implements Comparable<Plugin> {
 	}
 
 	public static final int compareVersionString(final String currentVersion, final String otherVersion) {
-		
 		String[] currentParts = currentVersion.split("[.-]");
 		String[] otherParts = otherVersion.split("[.-]");
 		
@@ -597,12 +576,10 @@ public class Plugin implements Comparable<Plugin> {
 		} catch (NumberFormatException e) {
 			return -2;
 		}
-		
 	}
 
+	@Override
 	public String toString() {
 		return this.identifier + ":" + this.name + " v." + this.version;
 	}
-
-
 }

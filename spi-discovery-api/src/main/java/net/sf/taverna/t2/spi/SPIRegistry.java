@@ -26,7 +26,6 @@ import net.sf.taverna.raven.appconfig.ApplicationRuntime;
 import net.sf.taverna.raven.log.Log;
 import net.sf.taverna.raven.log.Log4jLog;
 import net.sf.taverna.raven.repository.Repository;
-import net.sf.taverna.raven.repository.impl.EclipseRepository;
 import net.sf.taverna.raven.repository.impl.LocalArtifactClassLoader;
 import net.sf.taverna.raven.spi.InstanceRegistry;
 import net.sf.taverna.raven.spi.InstanceRegistryListener;
@@ -50,18 +49,15 @@ import net.sf.taverna.t2.spi.SPIRegistry.SPIRegistryEvent;
  * @param <SPI>
  *            The interface type that the SPI classes implement
  */
+@SuppressWarnings("rawtypes")
 public class SPIRegistry<SPI> implements Observable<SPIRegistryEvent> {
-
 	public class RegistryListenerAdapter implements InstanceRegistryListener {
-
-		@SuppressWarnings("unchecked")
+		@Override
 		public void instanceRegistryUpdated(InstanceRegistry registry) {
-			if (registry != instanceRegistry) {
+			if (registry != instanceRegistry)
 				return;
-			}
 			multiCaster.notify(UPDATED);
 		}
-
 	}
 
 	public static class SPIRegistryEvent {
@@ -82,8 +78,7 @@ public class SPIRegistry<SPI> implements Observable<SPIRegistryEvent> {
 
 	private InstanceRegistry<SPI> instanceRegistry = null;
 	private InstanceRegistryListener instanceRegistryListener = new RegistryListenerAdapter();
-	private MultiCaster<SPIRegistryEvent> multiCaster = new MultiCaster<SPIRegistryEvent>(
-			this);
+	private MultiCaster<SPIRegistryEvent> multiCaster = new MultiCaster<>(this);
 
 	private SpiRegistry ravenSPIRegistry = null;
 
@@ -99,6 +94,7 @@ public class SPIRegistry<SPI> implements Observable<SPIRegistryEvent> {
 		this.spi = spi;
 	}
 
+	@Override
 	public void addObserver(Observer<SPIRegistryEvent> observer) {
 		multiCaster.addObserver(observer);
 	}
@@ -117,6 +113,7 @@ public class SPIRegistry<SPI> implements Observable<SPIRegistryEvent> {
 		return getRegistry().getInstances();
 	}
 
+	@Override
 	public List<Observer<SPIRegistryEvent>> getObservers() {
 		return multiCaster.getObservers();
 	}
@@ -125,7 +122,7 @@ public class SPIRegistry<SPI> implements Observable<SPIRegistryEvent> {
 		if (instanceRegistry == null) {
 			ravenSPIRegistry = new SpiRegistry(getRepository(), spi.getName(),
 					getClassLoader());
-			instanceRegistry = new InstanceRegistry<SPI>(ravenSPIRegistry,
+			instanceRegistry = new InstanceRegistry<>(ravenSPIRegistry,
 					new Object[0]);
 		}
 		instanceRegistry.addRegistryListener(instanceRegistryListener);
@@ -162,6 +159,7 @@ public class SPIRegistry<SPI> implements Observable<SPIRegistryEvent> {
 		ravenSPIRegistry = null;
 	}
 
+	@Override
 	public void removeObserver(Observer<SPIRegistryEvent> observer) {
 		multiCaster.removeObserver(observer);
 	}

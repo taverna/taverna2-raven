@@ -113,38 +113,27 @@ import org.jdom.output.XMLOutputter;
  * @author Stian Soiland-Reyes
  */
 public class PluginManager implements PluginListener {
-
 	private static final String PLUGINS_XML = "plugins.xml";
-
+	@SuppressWarnings("unused")
 	private static final String XSD_NS = "http://www.w3.org/2001/XMLSchema-instance";
-
+	@SuppressWarnings("unused")
 	private static final String SCHEMA_LOCATION = "http://taverna.sourceforge.net/2008/xml/plugins/plugins-2008-10-16.xsd";
-
 	private static final String PLUGINS_NS = "http://taverna.sf.net/2008/xml/plugins";
+	private static Log logger = Log.getLogger(PluginManager.class);
+	private static PluginManager instance;
+	private static Repository repository;
+	private static List<PluginManagerListener> pluginManagerListeners = new ArrayList<>();
+	private static int TIMEOUT = 5000;
 
 	private ApplicationRuntime appRuntime = ApplicationRuntime.getInstance();
 
-	private static Log logger = Log.getLogger(PluginManager.class);
-
-	private static PluginManager instance;
-
-	private static Repository repository;
-
-	private static List<PluginManagerListener> pluginManagerListeners = new ArrayList<PluginManagerListener>();
-
 	private File pluginsDir;
-	private URL defaultPluginsDir; // defaults are read from
-	// $taverna.startup/plugins
-
-	private List<PluginSite> pluginSites = new ArrayList<PluginSite>();
-
-	private List<Plugin> plugins = new ArrayList<Plugin>();
-
-	private List<Plugin> updatedPlugins = new ArrayList<Plugin>();
-
+	/** defaults are read from $taverna.startup/plugins */
+	private URL defaultPluginsDir;
+	private List<PluginSite> pluginSites = new ArrayList<>();
+	private List<Plugin> plugins = new ArrayList<>();
+	private List<Plugin> updatedPlugins = new ArrayList<>();
 	private Profile profile = ProfileFactory.getInstance().getProfile();
-	
-	private static int TIMEOUT = 5000;
 
 	/**
 	 * Constructs an instance of PluginManager.
@@ -194,8 +183,10 @@ public class PluginManager implements PluginListener {
 			sortPlugins();
 			for (String repositoryURI : plugin.getRepositories()) {
 				try {
-					// T2-338 - always add to the end - do not use
-					// prependRemoteRepository
+					/*
+					 * T2-338 - always add to the end - do not use
+					 * prependRemoteRepository
+					 */
 					repository.addRemoteRepository(new URI(repositoryURI));
 				} catch (URISyntaxException e) {
 					logger.warn("Invalid remote repository URI - "
@@ -286,8 +277,10 @@ public class PluginManager implements PluginListener {
 	}
 
 	public void removePlugin(Plugin plugin) {
-		// might need a pop up to warn if there are any system artifacts -
-		// restart might be required
+		/*
+		 * might need a pop up to warn if there are any system artifacts -
+		 * restart might be required
+		 */
 		if (updatedPlugins.contains(plugin))
 			updatedPlugins.remove(plugin);
 
@@ -324,8 +317,7 @@ public class PluginManager implements PluginListener {
 			}
 			logger.warn("Plugin " + plugin + " depends on unknown plugin "
 					+ pluginDep);
-			// TODO: Set disabled? (but without invoking the event handler
-			// again!)
+			// TODO: Set disabled? (but without invoking the event handler again!)
 
 		}
 
@@ -348,8 +340,10 @@ public class PluginManager implements PluginListener {
 	}
 
 	private void disablePlugin(Plugin plugin) {
-		// might need a pop up to warn if there are any system artifacts -
-		// restart might be required
+		/*
+		 * might need a pop up to warn if there are any system artifacts -
+		 * restart might be required
+		 */
 		if (plugins.contains(plugin)) {
 			for (Artifact artifact : plugin.getProfile().getArtifacts()) {
 				profile.removeArtifact(artifact);
@@ -610,6 +604,7 @@ public class PluginManager implements PluginListener {
 					if (plugin.isEnabled()) {
 						disablePlugin(plugin);
 					}
+					@SuppressWarnings("unused")
 					int index = plugins.indexOf(plugin);
 					plugins.remove(plugin);
 					plugin.removePluginListener(this);
@@ -621,8 +616,10 @@ public class PluginManager implements PluginListener {
 					sortPlugins();
 					for (String repositoryURI : newPlugin.getRepositories()) {
 						try {
-							// T2-338 - always add to the end - do not use
-							// prependRemoteRepository
+							/*
+							 * T2-338 - always add to the end - do not use
+							 * prependRemoteRepository
+							 */
 							repository.addRemoteRepository(new URI(repositoryURI));
 						} catch (URISyntaxException e) {
 							logger.warn("Invalid remote repository URI - "
@@ -648,7 +645,8 @@ public class PluginManager implements PluginListener {
 					}
 					
 					// Notify interested parties
-					firePluginUpdatedEvent(new PluginManagerEvent(this, newPlugin, plugins.indexOf(newPlugin)));
+					firePluginUpdatedEvent(new PluginManagerEvent(this, newPlugin,
+							plugins.indexOf(newPlugin)));
 					
 					newPlugin.addPluginListener(this);
 				}			
@@ -759,13 +757,7 @@ public class PluginManager implements PluginListener {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * net.sf.taverna.update.plugin.event.PluginListener#pluginChanged(net.sf
-	 * .taverna.update.plugin.event.PluginEvent)
-	 */
+	@Override
 	public void pluginChanged(PluginEvent event) {
 		if (event.getAction() == PluginEvent.ENABLED) {
 			enablePlugin(event.getPlugin());
@@ -798,15 +790,18 @@ public class PluginManager implements PluginListener {
 		}
 
 		for (Plugin plugin : extractedPlugins) {
-			plugin.setBuiltIn(false); // user provided plugins are not
-			// considered built in, and can be
-			// uninstalled
+			plugin.setBuiltIn(false);
+			/*
+			 * user provided plugins are not considered built in, and can be
+			 * uninstalled
+			 */
 			if (builtInPlugins.contains(plugin)) {
 				int i = builtInPlugins.indexOf(plugin);
-				// allow it to be uninstalled if it is the same plugin but
-				// different version.
-				// the built in plugin will then reappear as the original
-				// version when Taverna restarts
+				/*
+				 * allow it to be uninstalled if it is the same plugin but
+				 * different version. the built in plugin will then reappear as
+				 * the original version when Taverna restarts
+				 */
 				if (builtInPlugins.get(i).getVersion().equals(
 						plugin.getVersion())) {
 					plugin.setBuiltIn(true);
@@ -816,8 +811,11 @@ public class PluginManager implements PluginListener {
 		}
 
 		for (Plugin plugin : builtInPlugins) {
-			plugin.setBuiltIn(true); // default plugins are considered built
-			// in and cannot be uninstalled.
+			plugin.setBuiltIn(true);
+			/*
+			 * default plugins are considered built in and cannot be
+			 * uninstalled.
+			 */
 			addPlugin(plugin);
 		}
 		savePlugins();
@@ -858,9 +856,9 @@ public class PluginManager implements PluginListener {
 		List<TavernaPluginSite> result = new ArrayList<TavernaPluginSite>();
 		String prefix = "raven.pluginsite.";
 		if (Bootstrap.properties != null) {
-			Map<Integer, String> pluginSiteMap = new TreeMap<Integer, String>();
+			Map<Integer, String> pluginSiteMap = new TreeMap<>();
 			// tree map will do the sorting for us
-			for (Entry prop : Bootstrap.properties.entrySet()) {
+			for (Entry<Object,Object> prop : Bootstrap.properties.entrySet()) {
 				String propertyName = (String) prop.getKey();
 				if (propertyName.startsWith(prefix)
 						&& !propertyName.endsWith("name")) {
@@ -875,8 +873,10 @@ public class PluginManager implements PluginListener {
 				}
 			}
 
-			// create a list of URI objects from the space seperated list of
-			// alternatives for each site
+			/*
+			 * create a list of URI objects from the space seperated list of
+			 * alternatives for each site
+			 */
 			for (Integer siteIndex : pluginSiteMap.keySet()) {
 				String siteList = pluginSiteMap.get(siteIndex);
 				String nameKey = prefix + siteIndex + ".name";
@@ -973,6 +973,7 @@ public class PluginManager implements PluginListener {
 	private void sortPlugins() {
 		Collections.sort(plugins, new Comparator<Plugin>() {
 
+			@Override
 			public int compare(Plugin o1, Plugin o2) {
 				return o1.getName().compareTo(o2.getName());
 			}
@@ -994,7 +995,7 @@ public class PluginManager implements PluginListener {
 		xmlOptions.setSavePrettyPrint();
 		xmlOptions.setSavePrettyPrintIndent(4);
 		xmlOptions.setSaveOuter();
-		Map<String, String> prefixes = new HashMap<String, String>();
+		Map<String, String> prefixes = new HashMap<>();
 		prefixes.put(PLUGINS_NS, "plugins");
 		xmlOptions.setSaveSuggestedPrefixes(prefixes);
 		xmlOptions.setUseDefaultNamespace();

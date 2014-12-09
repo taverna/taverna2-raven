@@ -27,6 +27,7 @@ package net.sf.taverna.t2.spi;
  * 
  */
 public class FirstDummySPI implements DummySPI {
+	@Override
 	public String getName() {
 		return "FirstDummySPI";
 	}
